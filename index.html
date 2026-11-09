@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>App 1%</title>
 <meta name="description" content="Un 1% mejor cada día: gym, hábitos, dejar algo y tu móvil, con Míster.">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#101113">
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="iconos/icon-180.png"><link rel="icon" type="image/png" href="iconos/icon-192.png">
 <link rel="stylesheet" href="fuentes/fuentes.css">
-<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#101113;color:#F2F2EE}img{max-width:100%}[hidden]{display:none!important}
+<style>body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#101113;color:#F2F2EE}img{max-width:100%}[hidden]{display:none!important}
 
 /* Layout: la app a pantalla completa en el móvil; en el ordenador, un móvil centrado. Los colores de la app viven en .app: oscuro por defecto, claro y 6 colores. */
 :root{
@@ -603,9 +603,33 @@ input[type=file]{font-size:0}
 @media (prefers-reduced-transparency: reduce){
   .app::before{display:none} .box{background:var(--caja)} .sheet{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none} .overlay{background:rgba(10,11,12,.8)} }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .sheet{background:var(--bg)} }
+
+/* versión instalada: toda la pantalla, de borde a borde, sin zoom */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+input,textarea,select{font-size:16px}
+.app{--it:env(safe-area-inset-top,0px);--ib:env(safe-area-inset-bottom,0px)}
+@media (max-width:599px){
+  body{padding:0;display:block}
+  .app{position:fixed;inset:0;width:auto;height:auto;border:0;border-radius:0;box-shadow:none}
+  .cap{display:none}
+}
+.screen{padding-top:calc(var(--it) + 20px)}
+.tabbar{bottom:max(10px,var(--ib))}
+.barra-cta{bottom:calc(max(10px,var(--ib)) + 74px)}
+.app:not(.notab) .screen{padding-bottom:calc(var(--ib) + 104px)}
+.app.conbarra .screen{padding-bottom:calc(var(--ib) + 172px)}
+.app.condesc .screen{padding-bottom:calc(var(--ib) + 176px)}
+.app.notab .screen{padding-bottom:calc(var(--ib) + 28px)}
+.app:has(.wrap) .screen{padding:0}
+.toast{bottom:calc(var(--ib) + 86px)}
+.app.conbarra .toast{bottom:calc(var(--ib) + 150px)}
+.app.condesc .toast{bottom:calc(var(--ib) + 156px)}
+.app:not(.notab)::after{height:calc(var(--ib) + 120px)}
+.sheet{padding-bottom:calc(var(--ib) + 22px)}
 </style></head><body>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=7ceaafe8"></script><script src="banco.js?v=7ceaafe8"></script><script src="app.js?v=7ceaafe8"></script>
+<script src="datos.js?v=882fe1c0"></script><script src="banco.js?v=882fe1c0"></script><script src="app.js?v=882fe1c0"></script>
+<script>(function(){ var no=function(e){ e.preventDefault(); }; document.addEventListener('gesturestart',no,{passive:false}); document.addEventListener('gesturechange',no,{passive:false}); document.addEventListener('touchmove',function(e){ if(e.scale!==undefined && e.scale!==1) e.preventDefault(); if(e.touches && e.touches.length>1) e.preventDefault(); },{passive:false}); })();</script>
 <script>if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); } try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}</script>
 </body></html>
