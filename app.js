@@ -922,9 +922,9 @@ V.ejercicios = function(){ var f='';
 /* ---------- ficha de un ejercicio ---------- */
 V.ejercicio = function(){ var n=U.ejSel, k=fichaDe(n), F=k?FICHAS[k]:null, x=infoEj(n), ses=sesiones(n), b=mejor(n), h='';
   if(F){ var vi=F.vistas[U.vista]||F.vistas[0], seg='', mus='';
-    F.vistas.forEach(function(v,i){ var on=v[0]===vi[0]; seg+='<button type="button" class="fv'+(on?' on':'')+'" aria-pressed="'+on+'" data-a="vista" data-v="'+i+'">'+v[1]+'</button>'; });
+    if(F.vistas.length>1) F.vistas.forEach(function(v,i){ var on=v[0]===vi[0]; seg+='<button type="button" class="fv'+(on?' on':'')+'" aria-pressed="'+on+'" data-a="vista" data-v="'+i+'">'+v[1]+'</button>'; });
     F.p.forEach(function(m){ mus+='<span class="mus p">'+m+'</span>'; }); F.s.forEach(function(m){ mus+='<span class="mus s">'+m+'</span>'; });
-    h+='<figure class="fig-ej'+(U.pausa?' pausa':'')+'"><div class="fig-svg">'+FIG[k][vi[0]]+'</div><div class="fv-wrap">'+seg+'</div><button type="button" class="fig-play" data-a="pausa" aria-label="'+(U.pausa?'Seguir la animación':'Parar la animación')+'">'+(U.pausa?ic('play',16,2.4):ic('pausa',16,3))+'</button><span class="fig-tempo">'+F.tempo+'</span><div class="fig-ley" aria-hidden="true"><span><i class="lp"></i>Principales</span><span><i class="ls"></i>Secundarios</span></div></figure>'+
+    h+='<figure class="fig-ej'+(U.pausa?' pausa':'')+'"><div class="fig-svg">'+FIG[k][vi[0]]+'</div>'+(seg?'<div class="fv-wrap">'+seg+'</div>':'')+'<button type="button" class="fig-play" data-a="pausa" aria-label="'+(U.pausa?'Seguir la animación':'Parar la animación')+'">'+(U.pausa?ic('play',16,2.4):ic('pausa',16,3))+'</button><span class="fig-tempo">'+F.tempo+'</span><div class="fig-ley" aria-hidden="true"><span><i class="lp"></i>Principales</span><span><i class="ls"></i>Secundarios</span></div></figure>'+
       '<div class="sec"><span class="lbl">Músculos</span><div class="chips">'+mus+'</div></div>'; }
   else if(x[3]) h+='<p class="p2">'+e(x[3])+(x[2]&&x[2]!=='—'?' · '+e(x[2]):'')+'</p>';
   if(ses.length){ var ult=ses[0], hist='';
@@ -1011,7 +1011,9 @@ function celeHTML(){ var o=U.cele, anim=o.anim; o.anim=false;
   (o.frase ? M(e(o.frase)) : '')+
   cta(o.boton||'¡VAMOS!','cerrarCele','',ic('check'),'sm')+
   ((o.tipo==='record'||o.tipo==='hito'||o.tipo==='semana') ? '<button type="button" class="link c" style="min-height:40px" data-a="compartir" data-v="cele">Compartir en stories o WhatsApp</button>' : '')+'</div></div>'; }
-function contarArriba(){ var el=document.getElementById('cnt'); if(!el || el.dataset.hecho) return; el.dataset.hecho=1; var de=+el.dataset.de, a=+el.dataset.a, suf=el.dataset.suf, pre=a>=0?'+':'', t0=null;
+function contarArriba(){ var el=document.getElementById('cnt'); if(!el || el.dataset.hecho) return; el.dataset.hecho=1;
+  if(U.cele && U.cele.contado){ el.textContent=(+el.dataset.a>=0?'+':'')+el.dataset.a+(el.dataset.suf||''); el.classList.add('gol'); return; }
+  if(U.cele) U.cele.contado=1; var de=+el.dataset.de, a=+el.dataset.a, suf=el.dataset.suf, pre=a>=0?'+':'', t0=null;
   if(menosMov){ el.textContent=pre+a+suf; return; }
   function paso(ts){ if(!t0) t0=ts; var p=Math.min(1,(ts-t0)/900), ease=1-Math.pow(1-p,3); el.textContent=pre+Math.round(de+(a-de)*ease)+suf; if(p<1) requestAnimationFrame(paso); else { el.classList.add('gol'); } }
   setTimeout(function(){ requestAnimationFrame(paso); }, 250); }
@@ -1066,7 +1068,13 @@ async function fotoDeArchivo(id, file){ try{ var url=await comprimir(file); foto
     render(); confeti(30); vibrar(15); toast('Foto guardada con tu entreno.'); }catch(err){ toast('No he podido leer esa foto. Prueba con otra.'); } }
 async function fotosDeNube(){ if(!NUBE.ok) return; for(var i=0;i<D.entrenos.length;i++){ var x=D.entrenos[i]; if(x.foto && !FOTOS[x.id]){ try{ var s=await NUBE.db.doc(NUBE.base+'/foto-'+x.id).get(); if(s.exists && s.data().img) fotoPut(x.id, s.data().img); }catch(err){} } } if(!escribiendo()) render(); }
 /* Números que suben al aparecer (resumen del entreno) */
-function animarCuentas(){ var els=app.querySelectorAll('[data-cuenta]:not([data-hecho])'); [].forEach.call(els,function(el){ el.dataset.hecho=1; var a=+el.dataset.cuenta, suf=el.dataset.suf||'', t0=null; if(menosMov||!a) return;
+function ajustarGrande(){ var el=app.querySelector('.cele-grande'); if(!el) return;
+  el.style.fontSize=''; var caja=el.parentElement, max=caja.clientWidth - 2;
+  if(!max) return; var t=68;
+  while(el.scrollWidth>max && t>32){ t-=2; el.style.fontSize=t+'px'; } }
+function animarCuentas(){ var els=app.querySelectorAll('[data-cuenta]:not([data-hecho])'); U.contado=U.contado||{};
+  [].forEach.call(els,function(el){ el.dataset.hecho=1; var a=+el.dataset.cuenta, suf=el.dataset.suf||'', t0=null; if(menosMov||!a) return;
+  var llave=(U.pantalla||'')+'|'+(U.ultimo||'')+'|'+a+suf; if(U.contado[llave]) return; U.contado[llave]=1;
   el.textContent='0'+suf; function paso(ts){ if(!t0) t0=ts; var p=Math.min(1,(ts-t0)/1100), ease=1-Math.pow(1-p,3); el.textContent=num(a*ease)+suf; if(p<1) requestAnimationFrame(paso); } requestAnimationFrame(paso); }); }
 
 /* =========================================================
@@ -1369,7 +1377,7 @@ function render(){
   document.getElementById('scr').scrollTop = keep;
   if(U.pausa){ var fg=app.querySelector('.fig-svg svg'); if(fg){ try{ fg.pauseAnimations(); }catch(err){} } }
   U.recien=null; ultimaPant=U.pantalla; pintarFondo();
-  if(U.cele) contarArriba(); animarCuentas();
+  if(U.cele){ ajustarGrande(); contarArriba(); } animarCuentas();
   if(D.perfil && U.pantalla==='hoy' && !D.vistos.guiaHoy && !U.guia && !U.sheet){ D.vistos.guiaHoy=1; guardar(); U.guia={paso:0, ok:false, anim:true}; render(); }
 }
 function pintarFondo(){ try{ document.body.style.background = window.innerWidth<600 ? getComputedStyle(app).getPropertyValue('--bg').trim() : ''; }catch(err){} }
