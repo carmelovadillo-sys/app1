@@ -575,9 +575,37 @@ input[type=file]{font-size:0}
 .app:has(.wrap) .screen{padding:0}
 .share-img{width:100%;border-radius:16px;border:var(--fina)}
 @media (prefers-reduced-motion: reduce){ .respira span,.wrap-c{animation:none} }
+
+/* ===== Cristal: fondo vivo detrás y piezas esmeriladas encima ===== */
+.app{isolation:isolate;overflow:clip}
+.app::before{content:"";position:absolute;inset:-25%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(38% 30% at 18% 14%, color-mix(in srgb,var(--acc) 50%,transparent), transparent 70%),
+    radial-gradient(34% 28% at 88% 38%, color-mix(in srgb,#5B8CFF 40%,transparent), transparent 70%),
+    radial-gradient(40% 32% at 30% 82%, color-mix(in srgb,#B45BFF 32%,transparent), transparent 70%),
+    radial-gradient(30% 24% at 80% 92%, color-mix(in srgb,var(--acc) 18%,transparent), transparent 70%);
+  filter:blur(30px);animation:aurora 26s ease-in-out infinite alternate;will-change:transform}
+@keyframes aurora{0%{transform:translate3d(0,0,0) rotate(0deg) scale(1)}50%{transform:translate3d(4%,-3%,0) rotate(8deg) scale(1.06)}100%{transform:translate3d(-3%,4%,0) rotate(-6deg) scale(1.02)}}
+.app .screen{position:relative;z-index:1;background:transparent}
+.box{background:color-mix(in srgb,var(--caja) 64%,transparent);box-shadow:inset 0 1px 0 var(--brillo),0 6px 22px rgba(0,0,0,.10)}
+.app[data-tema="claro"] .box{background:color-mix(in srgb,var(--caja) 70%,transparent)}
+/* barra de abajo: borde de luz arriba-izquierda */
+.tabbar::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(255,255,255,.55),rgba(255,255,255,.08) 40%,rgba(255,255,255,0) 60%,rgba(255,255,255,.18));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box exclude,linear-gradient(#000 0 0)}
+.tabbar{--cristal:color-mix(in srgb,var(--bg) 52%,transparent)}
+/* hojas que suben: cristal grueso */
+.sheet{position:relative;background:color-mix(in srgb,var(--bg) 80%,transparent);-webkit-backdrop-filter:blur(30px) saturate(170%);backdrop-filter:blur(30px) saturate(170%);
+  box-shadow:inset 0 1px 0 var(--brillo),0 -10px 40px rgba(0,0,0,.25)}
+.overlay{background:rgba(10,11,12,.55);-webkit-backdrop-filter:blur(10px) saturate(140%);backdrop-filter:blur(10px) saturate(140%)}
+.toast{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+@media (prefers-reduced-motion: reduce){ .app::before{animation:none} }
+@media (prefers-reduced-transparency: reduce){
+  .app::before{display:none} .box{background:var(--caja)} .sheet{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none} .overlay{background:rgba(10,11,12,.8)} }
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .sheet{background:var(--bg)} }
 </style></head><body>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=2a16b592"></script><script src="banco.js?v=2a16b592"></script><script src="app.js?v=2a16b592"></script>
+<script src="datos.js?v=7ceaafe8"></script><script src="banco.js?v=7ceaafe8"></script><script src="app.js?v=7ceaafe8"></script>
 <script>if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); } try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}</script>
 </body></html>
