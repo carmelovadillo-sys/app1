@@ -1148,9 +1148,10 @@ var MEDALLAS = [
 var revisandoT=null;
 function revisarMedallas(silencio){ if(!D.perfil) return; var c=cumplidosHasta(hoy()), nuevas=[];
   var primeraVez = !D.medallas; if(primeraVez) D.medallas={};
+  var quitadas=0; MEDALLAS.forEach(function(m){ if(D.medallas[m[0]]===hoy()){ var sigue=false; try{ sigue=m[3](c); }catch(err){} if(!sigue){ delete D.medallas[m[0]]; quitadas++; } } });
   MEDALLAS.forEach(function(m){ if(D.medallas[m[0]]) return; var ok=false; try{ ok=m[3](c); }catch(err){} if(ok){ D.medallas[m[0]]=hoy(); nuevas.push(m); } });
   var niv=nivelDe(c), subeNivel = D.nivel && niv.i>D.nivel; var habiaNivel=D.nivel; D.nivel=Math.max(D.nivel||0, niv.i);
-  if(!nuevas.length && !subeNivel && !primeraVez && habiaNivel) return;
+  if(!nuevas.length && !quitadas && !subeNivel && !primeraVez && habiaNivel) return;
   D.ts=ahora(); try{ localStorage.setItem(KEY, JSON.stringify(D)); }catch(err){} nubeProgramar();
   if(primeraVez || silencio) return;
   if(subeNivel) celebrar({tipo:'hito', eyebrow:'Nivel '+niv.i, titulo:'¡Ahora eres '+niv.n+'!', grande:'NIVEL '+niv.i, sub:plural(c,'día cumplido','días cumplidos')+'.'+(niv.sig?' Próximo nivel, a los '+niv.sig[0]+'.':''), frase:'Esto no lo regala nadie: son tus días.', toast:'Subes a nivel '+niv.i+': '+niv.n+'.'});
@@ -1162,7 +1163,8 @@ function medallaSVG(id, on){ var i=MEDALLAS.map(function(m){ return m[0]; }).ind
 V.medallas = function(){ var h='', n=0;
   MEDALLAS.forEach(function(m){ var on=!!(D.medallas&&D.medallas[m[0]]); if(on) n++; h+='<div class="med-c'+(on?' on':'')+'">'+medallaSVG(m[0],on)+'<strong>'+m[1]+'</strong><span>'+(on?fechaCorta(D.medallas[m[0]]):m[2])+'</span></div>'; });
   var c=cumplidosHasta(hoy()), nv=nivelDe(c), pr = nv.sig ? Math.round((c-nv.desde)/(nv.sig[0]-nv.desde)*100) : 100;
-  return head('Medallas')+'<div class="box col" style="padding:14px;gap:8px;border:var(--lleno)"><div class="row sb"><span class="col" style="gap:2px"><span class="lbl acc">Nivel '+nv.i+'</span><strong style="font-size:20px">'+nv.n+'</strong></span><span class="num acc" style="font-size:34px">'+n+'/'+MEDALLAS.length+'</span></div><div class="mbar"><span class="llena" style="--w:'+pr+'%"></span></div><span style="font-size:13px;color:var(--text2)">'+(nv.sig?'Te faltan '+plural(nv.sig[0]-c,'día cumplido','días cumplidos')+' para ser '+nv.sig[1]+'.':'Nivel máximo. Leyenda.')+'</span></div>'+
+  var nivTxt = nv.sig ? (c ? 'Llevas '+plural(c,'día cumplido','días cumplidos')+'. ' : 'Aún no has cumplido ningún día entero. ')+'Con '+nv.sig[0]+' eres '+nv.sig[1]+(nv.sig[0]-c===1?': te falta uno.':': te faltan '+(nv.sig[0]-c)+'.') : 'Nivel máximo. Leyenda.';
+  return head('Medallas')+'<div class="box col" style="padding:14px;gap:10px;border:var(--lleno)"><div class="row sb" style="align-items:flex-end"><span class="col" style="gap:2px"><span class="lbl acc">Nivel '+nv.i+'</span><strong style="font-size:20px">'+nv.n+'</strong></span><span class="col" style="gap:0;align-items:flex-end"><span class="num" style="font-size:28px;line-height:1">'+n+'<span style="color:var(--text3);font-size:18px">/'+MEDALLAS.length+'</span></span><span class="lbl">medallas</span></span></div><div class="mbar"><span class="llena" style="--w:'+Math.max(pr,4)+'%"></span></div><span style="font-size:13px;color:var(--text2);line-height:1.4">'+nivTxt+' Un día cumplido es hacer todo lo que te toca ese día.</span></div>'+
   '<div class="med-grid">'+h+'</div><p class="nota">Las medallas solo se ganan haciendo cosas de verdad. Nada al azar.</p>'; };
 
 /* ---------- compromiso de la mañana ---------- */
