@@ -1292,6 +1292,110 @@ async function crearRecordatorio(hora){ var hh=(hora||'22:00').split(':'), m=(+h
 function esInstalada(){ try{ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }catch(err){ return false; } }
 
 /* =========================================================
+   Parte 8: el motor de las figuras de los ejercicios.
+   Antes cada pieza del muñeco se movía sola, con su propio reloj dentro
+   del SVG. En Safari eso se desacompasa: desaparece un brazo o un músculo
+   se queda atrás. Aquí se mueve todo desde un único reloj.
+   ========================================================= */
+var FIG_CACHE={};
+
+function anNums(s){ var p=s.trim().split(/[\s,]+/), r=[], i; for(i=0;i<p.length;i++){ r.push(parseFloat(p[i])); } return r; }
+function anTrozos(d){ /* separa un path en letras y números, para poder mezclarlo */
+  var t=d.match(/[a-zA-Z]|-?\d*\.?\d+(?:e[-+]?\d+)?/g)||[], letras='', nums=[], i;
+  for(i=0;i<t.length;i++){ if(/[a-zA-Z]/.test(t[i])) letras+=t[i]+'|'+nums.length+';'; else nums.push(parseFloat(t[i])); }
+  return {l:letras, n:nums, t:t};
+}
+function anPathMezcla(a,b,k){ /* a y b tienen la misma forma: solo cambian los números */
+  var r='', ia=0;
+  for(ia=0;ia<a.t.length;ia++){ var x=a.t[ia];
+    if(/[a-zA-Z]/.test(x)) r+=x;
+    else { var va=parseFloat(x), vb=parseFloat(b.t[ia]); r+=(va+(vb-va)*k).toFixed(2)+' '; } }
+  return r;
+}
+function anBezier(x1,y1,x2,y2,x){ /* el suavizado de las curvas, como en el SVG */
+  if(x<=0) return 0; if(x>=1) return 1;
+  var t=x, i, f, d;
+  for(i=0;i<8;i++){
+    var u=1-t, bx=3*u*u*t*x1+3*u*t*t*x2+t*t*t;
+    f=bx-x; if(f>-1e-4 && f<1e-4) break;
+    d=3*u*u*x1+6*u*t*(x2-x1)+3*t*t*(1-x2);
+    if(d<1e-6) break;
+    t-=f/d; if(t<0) t=0; if(t>1) t=1;
+  }
+  var u2=1-t; return 3*u2*u2*t*y1+3*u2*t*t*y2+t*t*t;
+}
+function anPrepara(tabla){
+  return tabla.map(function(o){
+    var vs=o.v.split(';'), n=vs.length, kt, ks=null, i;
+    if(o.kt){ kt=o.kt.split(';').map(parseFloat); }
+    else { kt=[]; for(i=0;i<n;i++) kt.push(n>1?i/(n-1):0); }
+    if(o.ks) ks=o.ks.split(';').map(anNums);
+    var val;
+    if(o.k===2){ val=vs.map(anTrozos); }
+    else if(o.k===1){ val=vs.map(parseFloat); }
+    else { val=vs.map(anNums); }
+    return {i:o.i, k:o.k, t:o.t, a:o.a?1:0, b:o.b||'', d:o.d?1:0, kt:kt, ks:ks, v:val, n:n};
+  });
+}
+function anValor(a, p){
+  var kt=a.kt, n=a.n, j=0;
+  if(p<=kt[0]) j=0;
+  else if(p>=kt[n-1]) j=n-1;
+  else { while(j<n-2 && kt[j+1]<=p) j++; }
+  if(a.d || j>=n-1 || kt[j+1]===kt[j]) return {j:j, k:0};
+  var k=(p-kt[j])/(kt[j+1]-kt[j]);
+  if(a.ks && a.ks[j]) k=anBezier(a.ks[j][0],a.ks[j][1],a.ks[j][2],a.ks[j][3],k);
+  return {j:j, k:k};
+}
+function anAplica(els, lista, p){
+  var trans={}, i;
+  for(i=0;i<lista.length;i++){
+    var a=lista[i], el=els[a.i]; if(!el) continue;
+    var q=anValor(a,p), j=q.j, k=q.k;
+    if(a.k===1){ var o1=a.v[j], o2=(j<a.n-1?a.v[j+1]:o1); el.setAttribute('opacity', (o1+(o2-o1)*k).toFixed(3)); continue; }
+    if(a.k===2){ var d1=a.v[j], d2=(j<a.n-1?a.v[j+1]:d1);
+      el.setAttribute('d', (k>0 && d1.t.length===d2.t.length) ? anPathMezcla(d1,d2,k) : d1.t.join(' ')); continue; }
+    var c1=a.v[j], c2=(j<a.n-1?a.v[j+1]:c1), c=[], z;
+    for(z=0;z<c1.length;z++){ var w1=c1[z], w2=(c2[z]==null?w1:c2[z]); c.push(+(w1+(w2-w1)*k).toFixed(3)); }
+    var s = a.t==='r' ? 'rotate('+c.join(' ')+')' : (a.t==='s' ? 'scale('+c.join(' ')+')' : 'translate('+c.join(' ')+')');
+    if(!trans[a.i] || !a.a) trans[a.i] = (a.a && a.b ? a.b+' ' : '') + s;
+    else trans[a.i] += ' '+s;
+  }
+  for(var id in trans){ if(els[id]) els[id].setAttribute('transform', trans[id]); }
+}
+var FIG_LOOP=null;
+function figuraParar(){ if(FIG_LOOP){ cancelAnimationFrame(FIG_LOOP.raf); FIG_LOOP=null; } }
+function figuraArranca(k, vista){
+  figuraParar();
+  var svg=app.querySelector('.fig-svg svg'); if(!svg || !FIGA[k] || !FIGA[k][vista]) return;
+  var clave=k+'/'+vista;
+  if(!FIG_CACHE[clave]) FIG_CACHE[clave]=anPrepara(FIGA[k][vista][1]);
+  var lista=FIG_CACHE[clave], dur=(FIGA[k][vista][0]||4)*1000, els={}, i;
+  var nodos=svg.querySelectorAll('[data-an]');
+  for(i=0;i<nodos.length;i++) els[nodos[i].getAttribute('data-an')]=nodos[i];
+  var est={raf:0, t0:0, p:0};
+  FIG_LOOP=est;
+  anAplica(els, lista, 0);
+  if(menosMov){ anAplica(els, lista, 0.5); return; }
+  function paso(ts){
+    if(FIG_LOOP!==est) return;
+    if(!svg.isConnected){ figuraParar(); return; }
+    if(U.pausa){ est.t0=ts-est.p*dur; est.raf=requestAnimationFrame(paso); return; }
+    if(!est.t0) est.t0=ts;
+    est.p=((ts-est.t0)%dur)/dur;
+    anAplica(els, lista, est.p);
+    est.raf=requestAnimationFrame(paso);
+  }
+  est.raf=requestAnimationFrame(paso);
+}
+function figuraAlDia(){
+  if(U.pantalla!=='ejercicio'){ figuraParar(); return; }
+  var k=fichaDe(U.ejSel); if(!k){ figuraParar(); return; }
+  var F=FICHAS[k], vi=F.vistas[U.vista]||F.vistas[0];
+  figuraArranca(k, vi[0]);
+}
+
+/* =========================================================
    Parte 4: hojas, guía, render, acciones y arranque
    ========================================================= */
 function hoja(lbl, titulo, cuerpo, botones, cerrar){ return '<div class="overlay guia-ov" role="dialog" aria-modal="true" aria-label="'+e(titulo.replace(/<[^>]+>/g,''))+'" data-a="'+(cerrar===false?'':'cerrarSheet')+'" data-fondo="1"><div class="sheet'+(U.sheet&&U.sheet.anim!==false?' anim':'')+'">'+
@@ -1375,9 +1479,8 @@ function render(){
     sheetHTML() + (U.guia ? guiaHTML() : '') + (U.cele ? celeHTML() : '');
   toastPrev=U.toast;
   document.getElementById('scr').scrollTop = keep;
-  if(U.pausa){ var fg=app.querySelector('.fig-svg svg'); if(fg){ try{ fg.pauseAnimations(); }catch(err){} } }
   U.recien=null; ultimaPant=U.pantalla; pintarFondo();
-  if(U.cele){ ajustarGrande(); contarArriba(); } animarCuentas();
+  if(U.cele){ ajustarGrande(); contarArriba(); } animarCuentas(); figuraAlDia();
   if(D.perfil && U.pantalla==='hoy' && !D.vistos.guiaHoy && !U.guia && !U.sheet){ D.vistos.guiaHoy=1; guardar(); U.guia={paso:0, ok:false, anim:true}; render(); }
 }
 function pintarFondo(){ try{ document.body.style.background = window.innerWidth<600 ? getComputedStyle(app).getPropertyValue('--bg').trim() : ''; }catch(err){} }
@@ -1486,7 +1589,7 @@ function act(a,v,el){
     case 'crearEj': var nn=U.busca.trim().replace(/\s+/g,' '); if(!nn) break; nn=cap(nn); if(D.propios.indexOf(nn)===-1 && !EJ.some(function(x){ return x[0]===nn; })) D.propios.push(nn); guardar(); if(U.modoEj==='ver'){ U.ejSel=nn; U.vista=0; go('ejercicio'); } else elegirEj(nn); break;
     case 'verEj': U.ejSel=v; U.vista=0; U.pausa=false; go('ejercicio'); break;
     case 'vista': U.vista=+v; U.pausa=false; render(); break;
-    case 'pausa': U.pausa=!U.pausa; var fg=app.querySelector('.fig-svg svg'); if(fg){ try{ U.pausa?fg.pauseAnimations():fg.unpauseAnimations(); }catch(err){} } var pb=app.querySelector('.fig-play'); if(pb){ pb.innerHTML=U.pausa?ic('play',16,2.4):ic('pausa',16,3); pb.setAttribute('aria-label',U.pausa?'Seguir la animación':'Parar la animación'); } break;
+    case 'pausa': U.pausa=!U.pausa; var ff=app.querySelector('.fig-ej'); if(ff) ff.classList.toggle('pausa', U.pausa); var pb=app.querySelector('.fig-play'); if(pb){ pb.innerHTML=U.pausa?ic('play',16,2.4):ic('pausa',16,3); pb.setAttribute('aria-label',U.pausa?'Seguir la animación':'Parar la animación'); } break;
     case 'fichasTodas': U.fichasTodas=!U.fichasTodas; render(); break;
     case 'serieOk': var q=v.split('.'), s=A.ej[+q[0]].s[+q[1]]; if(!s.ok){ if(!s.r || s.r<=0){ toast('Pon las repeticiones.'); break; } if(s.kg==null) s.kg=0; s.ok=true; A.desc={fin:ahora()+(p.descanso||90)*1000}; U.recienSerie=v; guardar(); if(!recordEnSerie(A.ej[+q[0]], s)){ sonar('marca'); vibrar(15); render(); } else guardar(); } else { s.ok=false; delete s.rec; guardar(); render(); } break;
     case 'cerrarCele': cerrarCele(); break;
