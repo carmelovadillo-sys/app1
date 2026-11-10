@@ -608,30 +608,28 @@ input[type=file]{font-size:0}
    Splash de entrada · 1%
    Letra Anton (la de la marca) convertida a dibujo, inclinada hacia delante.
    Entrada suave; salida como un cristal esmerilado que se aclara.
-   Duración total 3,4 s. Se pinta antes que la app y se quita sola.
+   Duración total 2,6 s. Se pinta antes que la app y se quita sola. Minimalista: un punto, el logo y el eslogan.
    ========================================================= */
 .spl{position:fixed;top:0;left:0;right:0;height:var(--alto,100%);min-height:100%;z-index:99999;background:#080808;overflow:hidden;
   display:grid;place-items:center;-webkit-tap-highlight-color:transparent;
-  animation:splOut 3.4s linear both}
+  animation:splOut 2.6s linear both}
 @media (min-width:600px){
   .spl{inset:0;margin:auto;left:0;right:0;top:0;width:390px;height:min(844px,calc(100% - 40px));min-height:0;border-radius:44px}
 }
 .spl.fin{animation:splSkip .45s ease forwards!important}
-.spl-mark{position:relative;width:min(64%,270px);aspect-ratio:2675/1785;display:grid;place-items:center}
+.spl-mark{position:relative;width:min(42%,170px);aspect-ratio:2675/1785;display:grid;place-items:center}
 .spl-logo{position:relative;width:100%;height:100%;overflow:visible;display:block;
-  animation:splIn 1.35s cubic-bezier(.22,.7,.2,1) .8s both, splLeave .9s cubic-bezier(.45,0,.9,.6) 2.4s forwards;will-change:transform,opacity,filter}
+  animation:splIn 1s cubic-bezier(.22,.7,.2,1) .55s both, splLeave .7s cubic-bezier(.45,0,.9,.6) 1.8s forwards;will-change:transform,opacity,filter}
 .spl-spark{transform-box:fill-box;transform-origin:center;filter:drop-shadow(0 0 120px rgba(255,214,10,.9));
-  animation:splSpark .9s cubic-bezier(.2,.9,.3,1) 1.55s both}
+  animation:splSpark .7s cubic-bezier(.2,.9,.3,1) 1.05s both}
 .spl-dot{position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:#fff;
-  box-shadow:0 0 18px 4px rgba(255,255,255,.55);opacity:0;animation:splDot 1.2s cubic-bezier(.3,.7,.3,1) .25s both;will-change:transform,opacity}
+  box-shadow:0 0 18px 4px rgba(255,255,255,.55);opacity:0;animation:splDot .9s cubic-bezier(.3,.7,.3,1) .15s both;will-change:transform,opacity}
 .spl-glow{position:absolute;left:50%;top:50%;width:190%;aspect-ratio:1;margin:-95% 0 0 -95%;border-radius:50%;pointer-events:none;
-  background:radial-gradient(closest-side,rgba(255,255,255,.15) 0%,rgba(255,236,150,.07) 30%,rgba(255,214,10,.025) 55%,rgba(255,214,10,.008) 80%,transparent 100%);
-  opacity:0;animation:splGlow 3.4s ease-out both;will-change:transform,opacity}
-.spl-wave{position:absolute;left:50%;top:50%;width:150%;aspect-ratio:1;margin:-75% 0 0 -75%;border-radius:50%;pointer-events:none;
-  border:1px solid rgba(255,255,255,.16);opacity:0;animation:splWave 1.3s cubic-bezier(.2,.6,.2,1) .72s both;will-change:transform,opacity}
-.spl-tag{position:absolute;left:50%;top:100%;margin-top:clamp(22px,7vw,30px);transform:translateX(-50%);white-space:nowrap;text-align:center;
-  font:600 clamp(9.5px,3.05vw,12px)/1 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.42em;text-indent:.42em;color:rgba(255,255,255,.7);
-  opacity:0;animation:splTag 1.1s cubic-bezier(.2,.7,.2,1) 1.7s both, splLeaveT .8s ease-in 2.35s forwards;will-change:transform,opacity}
+  background:radial-gradient(closest-side,rgba(255,255,255,.11) 0%,rgba(255,236,150,.05) 30%,rgba(255,214,10,.025) 55%,rgba(255,214,10,.008) 80%,transparent 100%);
+  opacity:0;animation:splGlow 2.6s ease-out both;will-change:transform,opacity}
+.spl-tag{position:absolute;left:50%;top:100%;margin-top:clamp(18px,5.5vw,24px);transform:translateX(-50%);white-space:nowrap;text-align:center;
+  font:600 clamp(8.5px,2.7vw,10.5px)/1 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.4em;text-indent:.4em;color:rgba(255,255,255,.62);
+  opacity:0;animation:splTag .8s cubic-bezier(.2,.7,.2,1) 1.15s both, splLeaveT .6s ease-in 1.8s forwards;will-change:transform,opacity}
 .spl-tag b{font-weight:800;color:#fff}
 
 /* salida: el negro se vuelve cristal esmerilado y se aclara hasta dejar ver la app */
@@ -646,7 +644,6 @@ input[type=file]{font-size:0}
 @keyframes splSkip{to{opacity:0;visibility:hidden}}
 @keyframes splDot{0%{opacity:0;transform:scale(.3)}22%{opacity:1;transform:scale(1)}58%{opacity:1;transform:scale(1.15)}100%{opacity:0;transform:scale(5)}}
 @keyframes splGlow{0%,20%{opacity:0;transform:scale(.25)}36%{opacity:.95;transform:scale(1)}55%{opacity:.5;transform:scale(1.06)}72%{opacity:.4;transform:scale(1.08)}100%{opacity:0;transform:scale(1.1)}}
-@keyframes splWave{0%{opacity:0;transform:scale(.04)}12%{opacity:.5}100%{opacity:0;transform:scale(1)}}
 @keyframes splIn{0%{opacity:0;transform:scale(.88);filter:blur(14px)}100%{opacity:1;transform:scale(1);filter:blur(0)}}
 @keyframes splLeave{0%{opacity:1;transform:scale(1);filter:blur(0)}100%{opacity:0;transform:scale(1.06);filter:blur(10px)}}
 @keyframes splSpark{0%{opacity:0;transform:scale(.3)}100%{opacity:1;transform:scale(1)}}
@@ -654,11 +651,10 @@ input[type=file]{font-size:0}
 @keyframes splLeaveT{0%{opacity:1}100%{opacity:0}}
 
 @media (prefers-reduced-motion:reduce){
-  .spl{animation:splOutRM 2.1s linear both}
-  .spl-dot,.spl-glow,.spl-wave{display:none}
-  .spl-logo{animation:splFade .5s ease .1s both, splLeaveT .45s ease-in 1.55s forwards;filter:none}
+  .spl{animation:splOutRM 1.7s linear both}
+  .spl-dot,.spl-glow,  .spl-logo{animation:splFade .4s ease .1s both, splLeaveT .4s ease-in 1.2s forwards;filter:none}
   .spl-spark{animation:none}
-  .spl-tag{animation:splFadeT .5s ease .4s both, splLeaveT .45s ease-in 1.55s forwards}
+  .spl-tag{animation:splFadeT .4s ease .3s both, splLeaveT .4s ease-in 1.2s forwards}
 }
 @keyframes splFade{from{opacity:0}to{opacity:1}}
 @keyframes splFadeT{from{opacity:0;transform:translateX(-50%)}to{opacity:1;transform:translateX(-50%)}}
@@ -687,11 +683,11 @@ input,textarea,select{font-size:16px}
 .app:not(.notab)::after{height:calc(var(--ib) + 120px)}
 .sheet{padding-bottom:calc(var(--ib) + 22px)}
 </style></head><body>
-<div class="spl" id="spl" aria-hidden="true"><div class="spl-mark"><div class="spl-glow"></div><div class="spl-wave"></div><div class="spl-dot"></div><svg class="spl-logo" viewBox="202 0 2675 1785" focusable="false"><defs><linearGradient id="splg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#D9E3F6"/></linearGradient></defs><path fill="url(#splg)" d="M243 1767 434 411Q392 454 325 480Q258 507 202 507L242 226Q296 218 360 192Q425 165 484 118Q543 72 580 6H863L616 1767Z M1300 1767 2088 0H2412L1623 1767Z M1147 1239Q961 1239 875 1124Q788 1010 815 819L866 456Q895 254 1007 146Q1119 38 1316 38Q1513 38 1595 146Q1678 254 1649 456L1598 819Q1571 1010 1453 1124Q1334 1239 1147 1239Z M2367 1785Q2181 1785 2095 1670Q2009 1556 2035 1365L2087 1002Q2115 800 2227 692Q2339 584 2536 584Q2733 584 2816 692Q2898 800 2870 1002L2818 1365Q2792 1556 2673 1670Q2554 1785 2367 1785Z M2404 1523Q2443 1523 2474 1494Q2505 1466 2511 1424L2580 938Q2588 879 2576 845Q2563 811 2504 811Q2446 811 2424 846Q2402 880 2394 938L2325 1424Q2319 1466 2342 1494Q2365 1523 2404 1523Z M1184 977Q1223 977 1254 948Q1285 920 1291 878L1359 392Q1368 333 1355 299Q1343 265 1284 265Q1226 265 1204 300Q1181 334 1173 392L1105 878Q1099 920 1122 948Q1145 977 1184 977Z"/><path class="spl-spark" fill="#FFD60A" d="M1184 977Q1223 977 1254 948Q1285 920 1291 878L1359 392Q1368 333 1355 299Q1343 265 1284 265Q1226 265 1204 300Q1181 334 1173 392L1105 878Q1099 920 1122 948Q1145 977 1184 977Z"/></svg><div class="spl-tag">BE <b>1%</b> BETTER EVERY DAY</div></div></div>
+<div class="spl" id="spl" aria-hidden="true"><div class="spl-mark"><div class="spl-glow"></div><div class="spl-dot"></div><svg class="spl-logo" viewBox="202 0 2675 1785" focusable="false"><defs><linearGradient id="splg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#D9E3F6"/></linearGradient></defs><path fill="url(#splg)" d="M243 1767 434 411Q392 454 325 480Q258 507 202 507L242 226Q296 218 360 192Q425 165 484 118Q543 72 580 6H863L616 1767Z M1300 1767 2088 0H2412L1623 1767Z M1147 1239Q961 1239 875 1124Q788 1010 815 819L866 456Q895 254 1007 146Q1119 38 1316 38Q1513 38 1595 146Q1678 254 1649 456L1598 819Q1571 1010 1453 1124Q1334 1239 1147 1239Z M2367 1785Q2181 1785 2095 1670Q2009 1556 2035 1365L2087 1002Q2115 800 2227 692Q2339 584 2536 584Q2733 584 2816 692Q2898 800 2870 1002L2818 1365Q2792 1556 2673 1670Q2554 1785 2367 1785Z M2404 1523Q2443 1523 2474 1494Q2505 1466 2511 1424L2580 938Q2588 879 2576 845Q2563 811 2504 811Q2446 811 2424 846Q2402 880 2394 938L2325 1424Q2319 1466 2342 1494Q2365 1523 2404 1523Z M1184 977Q1223 977 1254 948Q1285 920 1291 878L1359 392Q1368 333 1355 299Q1343 265 1284 265Q1226 265 1204 300Q1181 334 1173 392L1105 878Q1099 920 1122 948Q1145 977 1184 977Z"/><path class="spl-spark" fill="#FFD60A" d="M1184 977Q1223 977 1254 948Q1285 920 1291 878L1359 392Q1368 333 1355 299Q1343 265 1284 265Q1226 265 1204 300Q1181 334 1173 392L1105 878Q1099 920 1122 948Q1145 977 1184 977Z"/></svg><div class="spl-tag">BE <b>1%</b> BETTER EVERY DAY</div></div></div>
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=9a9e8ac9"></script><script src="banco.js?v=9a9e8ac9"></script><script src="app.js?v=9a9e8ac9"></script>
+<script src="datos.js?v=87091246"></script><script src="banco.js?v=87091246"></script><script src="app.js?v=87091246"></script>
 <script>(function(){ var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(st && screen.height){ var fija=function(){ var h=Math.max(screen.height, screen.width>screen.height?0:screen.height); document.documentElement.style.setProperty('--alto', h+'px'); }; fija(); } })();</script>
 <script>(function(){ var no=function(e){ e.preventDefault(); }; document.addEventListener('gesturestart',no,{passive:false}); document.addEventListener('gesturechange',no,{passive:false}); document.addEventListener('touchmove',function(e){ if(e.scale!==undefined && e.scale!==1) e.preventDefault(); if(e.touches && e.touches.length>1) e.preventDefault(); },{passive:false}); })();</script>
 <script>if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); } try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}</script>
