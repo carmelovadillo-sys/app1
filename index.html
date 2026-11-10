@@ -604,6 +604,56 @@ input[type=file]{font-size:0}
   .app::before{display:none} .box{background:var(--caja)} .sheet{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none} .overlay{background:rgba(10,11,12,.8)} }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .sheet{background:var(--bg)} }
 
+/* =========================================================
+   Splash de entrada · 1%
+   Solo usa transform, opacity y un blur pequeño: va por la GPU.
+   Duración total 2,9 s. Se pinta antes que la app y se quita sola.
+   ========================================================= */
+.spl{position:fixed;top:0;left:0;right:0;height:var(--alto,100%);min-height:100%;z-index:99999;background:#080808;overflow:hidden;
+  display:grid;place-items:center;contain:strict;-webkit-tap-highlight-color:transparent;
+  animation:splOut 2.9s linear both}
+@media (min-width:600px){
+  .spl{inset:0;margin:auto;left:0;right:0;top:0;width:390px;height:min(844px,calc(100% - 40px));min-height:0;border-radius:44px}
+}
+.spl.fin{animation:splSkip .28s ease forwards!important}
+.spl-mark{position:relative;width:min(60%,250px);aspect-ratio:280/160;display:grid;place-items:center}
+.spl-logo{position:relative;width:100%;height:100%;overflow:visible;display:block;
+  animation:splIn 1.05s cubic-bezier(.16,.8,.24,1) .8s both, splLeave .5s cubic-bezier(.4,0,1,1) 2.3s forwards;will-change:transform,opacity,filter}
+.spl-spark{transform-box:fill-box;transform-origin:center;filter:drop-shadow(0 0 7px rgba(255,214,10,.85));
+  animation:splSpark .7s cubic-bezier(.2,.9,.3,1) 1.35s both}
+.spl-dot{position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:#fff;
+  box-shadow:0 0 18px 4px rgba(255,255,255,.55);opacity:0;animation:splDot 1.1s cubic-bezier(.3,.7,.3,1) .25s both;will-change:transform,opacity}
+.spl-glow{position:absolute;left:50%;top:50%;width:190%;aspect-ratio:1;margin:-95% 0 0 -95%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(255,255,255,.15) 0%,rgba(255,236,150,.07) 30%,rgba(255,214,10,.025) 55%,rgba(255,214,10,.008) 80%,transparent 100%);
+  opacity:0;animation:splGlow 2.9s ease-out both;will-change:transform,opacity}
+.spl-wave{position:absolute;left:50%;top:50%;width:150%;aspect-ratio:1;margin:-75% 0 0 -75%;border-radius:50%;pointer-events:none;
+  border:1px solid rgba(255,255,255,.16);opacity:0;animation:splWave 1.2s cubic-bezier(.2,.6,.2,1) .72s both;will-change:transform,opacity}
+.spl-tag{position:absolute;left:50%;top:100%;margin-top:clamp(22px,7vw,30px);transform:translateX(-50%);white-space:nowrap;text-align:center;
+  font:500 clamp(9.5px,3.05vw,12px)/1 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:.42em;text-indent:.42em;color:rgba(255,255,255,.66);
+  opacity:0;animation:splTag 1s cubic-bezier(.2,.7,.2,1) 1.5s both, splLeaveT .45s ease-in 2.3s forwards;will-change:transform,opacity}
+.spl-tag b{font-weight:700;color:#fff}
+
+@keyframes splOut{0%,84%{opacity:1;visibility:visible}99.9%{opacity:0;visibility:visible}100%{opacity:0;visibility:hidden}}
+@keyframes splSkip{to{opacity:0;visibility:hidden}}
+@keyframes splDot{0%{opacity:0;transform:scale(.3)}22%{opacity:1;transform:scale(1)}58%{opacity:1;transform:scale(1.15)}100%{opacity:0;transform:scale(5)}}
+@keyframes splGlow{0%,24%{opacity:0;transform:scale(.25)}42%{opacity:.95;transform:scale(1)}64%{opacity:.5;transform:scale(1.06)}84%{opacity:.4;transform:scale(1.08)}100%{opacity:0;transform:scale(1.1)}}
+@keyframes splWave{0%{opacity:0;transform:scale(.04)}12%{opacity:.5}100%{opacity:0;transform:scale(1)}}
+@keyframes splIn{0%{opacity:0;transform:scale(.86);filter:blur(10px)}100%{opacity:1;transform:scale(1);filter:blur(0)}}
+@keyframes splLeave{0%{opacity:1;transform:scale(1);filter:blur(0)}100%{opacity:0;transform:scale(1.05);filter:blur(6px)}}
+@keyframes splSpark{0%{opacity:0;transform:scale(.2)}100%{opacity:1;transform:scale(1)}}
+@keyframes splTag{0%{opacity:0;transform:translateX(-50%) translateY(9px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes splLeaveT{0%{opacity:1}100%{opacity:0}}
+
+@media (prefers-reduced-motion:reduce){
+  .spl{animation-duration:1.9s}
+  .spl-dot,.spl-glow,.spl-wave{display:none}
+  .spl-logo{animation:splFade .45s ease .1s both, splLeaveT .4s ease-in 1.4s forwards;filter:none}
+  .spl-spark{animation:none}
+  .spl-tag{animation:splFadeT .45s ease .35s both, splLeaveT .4s ease-in 1.4s forwards}
+}
+@keyframes splFade{from{opacity:0}to{opacity:1}}
+@keyframes splFadeT{from{opacity:0;transform:translateX(-50%)}to{opacity:1;transform:translateX(-50%)}}
+
 /* versión instalada: toda la pantalla, de borde a borde, sin zoom */
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 input,textarea,select{font-size:16px}
@@ -628,9 +678,11 @@ input,textarea,select{font-size:16px}
 .app:not(.notab)::after{height:calc(var(--ib) + 120px)}
 .sheet{padding-bottom:calc(var(--ib) + 22px)}
 </style></head><body>
+<div class="spl" id="spl" aria-hidden="true"><div class="spl-mark"><div class="spl-glow"></div><div class="spl-wave"></div><div class="spl-dot"></div><svg class="spl-logo" viewBox="-2 0 280 160" focusable="false"><g fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M32 52L64 24V136"/><circle cx="138" cy="50" r="21"/><circle cx="222" cy="110" r="21"/><path d="M232 20L128 140"/></g><circle class="spl-spark" cx="138" cy="50" r="9" fill="#FFD60A"/></svg><div class="spl-tag">BE <b>1%</b> BETTER EVERY DAY</div></div></div>
+<script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s&&(e.animationName==='splOut'||e.animationName==='splSkip'))q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4200);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=1ccda246"></script><script src="banco.js?v=1ccda246"></script><script src="app.js?v=1ccda246"></script>
+<script src="datos.js?v=110f5c64"></script><script src="banco.js?v=110f5c64"></script><script src="app.js?v=110f5c64"></script>
 <script>(function(){ var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(st && screen.height){ var fija=function(){ var h=Math.max(screen.height, screen.width>screen.height?0:screen.height); document.documentElement.style.setProperty('--alto', h+'px'); }; fija(); } })();</script>
 <script>(function(){ var no=function(e){ e.preventDefault(); }; document.addEventListener('gesturestart',no,{passive:false}); document.addEventListener('gesturechange',no,{passive:false}); document.addEventListener('touchmove',function(e){ if(e.scale!==undefined && e.scale!==1) e.preventDefault(); if(e.touches && e.touches.length>1) e.preventDefault(); },{passive:false}); })();</script>
 <script>if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); } try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}</script>
