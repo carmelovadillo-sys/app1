@@ -5,7 +5,7 @@
 (function(){
 'use strict';
 var app = document.getElementById('app');
-var VERSION = 'Beta final 3 · 9 nov 2026';
+var VERSION = 'Beta final 4 · 10 nov 2026';
 var APP_URL = 'https://carmelovadillo-sys.github.io/app1/';
 var KEY = 'app1pct.v1';
 
@@ -542,7 +542,7 @@ V.cierre = function(){ var f=U.cierreDe, c=U.ck, p=D.perfil, esHoy=f===hoy(), fz
     if(k==='moverme'){ extra+='<div class="sec"><label class="lbl" for="in-ckpasos">Pasos '+(esHoy?'de hoy':'de ese día')+' · meta '+num(p.metaPasos)+'</label><div class="row" style="gap:8px"><input id="in-ckpasos" class="input" type="text" inputmode="numeric" placeholder="Por ejemplo, 8200" value="'+e(c.pasos)+'" data-in="ck.pasos" style="flex:1"><button type="button" class="chip'+(c.h.moverme?' on':'')+'" style="min-height:56px" aria-pressed="'+(!!c.h.moverme)+'" data-a="ck:h" data-v="moverme">30 min andando</button></div></div>'; return; }
     var x=tarea(k,f), meta = esHoy ? x.meta : x.meta.replace(/ hoy\b/,''), q = k==='minimo' ? meta+'. ¿Hecho?' : (k==='dejar' ? (esHoy?'¿Hoy, ':'¿Ese día, ')+DEJAR[(p.dejar&&p.dejar.que)||'otra'][1]+'?' : meta+'. ¿Hecho?');
     extra+=sino('h.'+k, (k==='minimo'?'LO MÍNIMO':AREAS[k].n), q, c.h[k]===true?'si':(c.h[k]===false?'no':null)); });
-  retosActivos(f).forEach(function(r){ var R=retoDef(r.n); if(!R || R.auto || r.ini>f) return; extra+=sino('r.'+r.id,'Reto · '+e(r.n.toLowerCase()), R.q, c.retos[r.id]||null); });
+  retosActivos(f).forEach(function(r){ var R=retoDef(r.n); if(!R || R.auto || r.ini>f || retoLibre(r,f)) return; extra+=sino('r.'+r.id,'Reto · '+e(nombreReto(r).toLowerCase()), qReto(r,R), c.retos[r.id]||null)+retoCierreExtra(r,f,c); });
   return headLbl(esHoy?'Cerrar el día':'Cerrar '+(f===sumar(hoy(),-1)?'ayer':fechaLarga(f)).toLowerCase())+
   '<h1 class="h1 q" style="margin-top:-4px">'+(esHoy?'¿Qué tal hoy, ':'¿Qué tal fue, ')+e(p.nombre)+'?</h1>'+
   '<div class="sec"><span class="lbl">¿Cómo de feliz '+(esHoy?'has estado hoy':'estuviste')+'? Del 1 al 10</span><div class="grid5">'+fz+'</div></div>'+
@@ -557,7 +557,7 @@ function guardarCierre(){ var c=U.ck, f=U.cierreDe; if(!c.feliz){ toast('Toca c�
   var ps=parseInt(String(c.pasos).replace(/\D/g,''),10); d.pasos = isNaN(ps)?null:ps;
   if(c.movilMin!=null) d.movilMin=c.movilMin; if(c.suenoMin!=null) d.suenoMin=c.suenoMin;
   for(var k in c.h){ if(c.h[k]===true) d.h[k]=true; else if(c.h[k]===false) delete d.h[k]; }
-  d.retos=c.retos; d.cerrado=true;
+  var retosAntes=d.retos||{}; d.retos=c.retos; d.cerrado=true; retoTrasDia(f, retosAntes, c);
   if(c.feliz<=3 && f===hoy() && !d.dificil && !cumplido(f)){ d.dificil=true; }
   var segs=Math.max(5,Math.round((ahora()-c.t0)/1000));
   var ok=cumplido(f), hechas=nHechas(f), tot=tareas(f).length, sit;
@@ -654,29 +654,40 @@ V.progreso = function(){ var f=hoy(), m=U.mes||f.slice(0,7), y=+m.slice(0,4), mo
 
 /* ====================== RETOS ====================== */
 var RETOS = [
-  {tema:'MÓVIL',n:'Sin móvil en la cama',total:7,vale:5,q:'¿Anoche dejaste el móvil fuera de la cama?'},
-  {tema:'MÓVIL',n:'Primera hora del día sin redes',total:7,vale:5,q:'¿Hoy, la primera hora sin redes?'},
-  {tema:'ENTRENO',n:'4 días de gym en una semana',total:7,vale:4,auto:'gym',q:'Se cuenta solo con tus entrenos.'},
-  {tema:'MOVERME',n:'8.000 pasos al día',total:7,vale:5,auto:'pasos',q:'Se cuenta solo con los pasos que apuntas.'},
-  {tema:'SUEÑO',n:'Misma hora de levantarte',total:7,vale:5,q:'¿Hoy te has levantado a tu hora?'},
-  {tema:'MENTE',n:'10 páginas al día',total:7,vale:5,q:'¿Hoy has leído tus 10 páginas?'},
-  {tema:'COMIDA',n:'Sal de casa con algo en la mochila',total:7,vale:5,q:'¿Hoy has salido con algo de comer?'},
-  {tema:'COMIDA',n:'Sin bollería ni fritos entre semana',total:5,vale:4,q:'¿Hoy, sin bollería ni fritos?'},
-  {tema:'ALCOHOL',n:'Sin alcohol entre semana',total:14,vale:9,q:'¿Hoy, sin alcohol?',dejar:1},
-  {tema:'ALCOHOL',n:'30 días sin alcohol',total:30,vale:27,q:'¿Hoy, sin alcohol?',dejar:1},
-  {tema:'TABACO',n:'Sin fumar ni vapear',total:7,vale:6,q:'¿Hoy, sin fumar ni vapear?',dejar:1},
-  {tema:'BEBIDAS',n:'Una semana sin energéticas',total:7,vale:6,q:'¿Hoy, sin energéticas?',dejar:1},
-  {tema:'CANNABIS',n:'Sin porros',total:14,vale:12,q:'¿Hoy, sin porros?',dejar:1},
-  {tema:'APUESTAS',n:'Sin apuestas online',total:30,vale:28,q:'¿Hoy, sin apostar?',dejar:1},
-  {tema:'HÁBITOS',n:'Sin morderte las uñas',total:14,vale:12,q:'¿Hoy, sin morderte las uñas?',dejar:1}
+  {tema:'MÓVIL',n:'Sin móvil en la cama',total:7,vale:5,k:'cama',q:'¿Anoche dejaste el móvil fuera de la cama?'},
+  {tema:'MÓVIL',n:'Primera hora del día sin redes',total:7,vale:5,k:'redes',q:'¿Hoy, la primera hora sin redes?'},
+  {tema:'MÓVIL',n:'Menos horas de pantalla',total:14,vale:10,k:'pantalla',q:'¿Hoy has estado por debajo de tu meta de pantalla?'},
+  {tema:'ENTRENO',n:'4 días de gym en una semana',total:7,vale:4,k:'gym',auto:'gym',q:'Se cuenta solo con tus entrenos.'},
+  {tema:'MOVERME',n:'8.000 pasos al día',total:7,vale:5,k:'pasos',auto:'pasos',q:'Se cuenta solo con los pasos que apuntas.'},
+  {tema:'SUEÑO',n:'Misma hora de levantarte',total:7,vale:5,k:'levantarse',q:'¿Hoy te has levantado a tu hora?'},
+  {tema:'SUEÑO',n:'A la cama a tu hora',total:14,vale:10,k:'dormir',q:'¿Anoche estabas en la cama a tu hora?'},
+  {tema:'MENTE',n:'10 páginas al día',total:7,vale:5,k:'paginas',q:'¿Hoy has leído tus 10 páginas?'},
+  {tema:'ESTUDIO',n:'Mis minutos de estudio',total:14,vale:8,k:'estudio',q:'¿Hoy has estudiado?'},
+  {tema:'ÁNIMO',n:'3 cosas buenas del día',total:21,vale:17,k:'buenas',auto:'buenas',q:'Cuenta el día cuando apuntas tus 3 cosas buenas.'},
+  {tema:'COMIDA',n:'Sal de casa con algo en la mochila',total:7,vale:5,k:'mochila',q:'¿Hoy has salido con algo de comer?'},
+  {tema:'COMIDA',n:'Sin bollería ni fritos entre semana',total:5,vale:4,k:'bolleria',q:'¿Hoy, sin bollería ni fritos?'},
+  {tema:'COMIDA',n:'2 litros de agua al día',total:14,vale:10,k:'agua',auto:'agua',q:'Cuenta el día cuando llegas a 8 vasos.'},
+  {tema:'ALCOHOL',n:'Sin alcohol entre semana',total:14,vale:9,k:'alcohol',q:'¿Hoy, sin alcohol?',dejar:1},
+  {tema:'ALCOHOL',n:'30 días sin alcohol',total:30,vale:27,k:'alcohol',q:'¿Hoy, sin alcohol?',dejar:1},
+  {tema:'TABACO',n:'Sin fumar ni vapear',total:7,vale:6,k:'tabaco',q:'¿Hoy, sin fumar ni vapear?',dejar:1},
+  {tema:'BEBIDAS',n:'Sin energéticas ni refrescos',total:7,vale:6,k:'bebidas',q:'¿Hoy, sin energéticas ni refrescos?',dejar:1},
+  {tema:'CANNABIS',n:'Sin porros',total:14,vale:12,k:'porros',q:'¿Hoy, sin porros?',dejar:1},
+  {tema:'APUESTAS',n:'Sin apuestas online',total:30,vale:28,k:'apuestas',q:'¿Hoy, sin apostar?',dejar:1},
+  {tema:'HÁBITOS',n:'Sin morderte las uñas',total:14,vale:12,k:'unas',q:'¿Hoy, sin morderte las uñas?',dejar:1},
+  {tema:'DEJAR',n:'Sin compras por impulso',total:30,vale:26,k:'compras',q:'¿Hoy, sin compras por impulso?',dejar:1},
+  {tema:'DEJAR',n:'Mi reto: dejar otra cosa',total:30,vale:26,k:'otra',q:'¿Hoy, sin eso?',dejar:1}
 ];
+var RETO_ALIAS = {'Una semana sin energéticas':'Sin energéticas ni refrescos'};
 var AVISO_SALUD = {ALCOHOL:'Si bebes mucho a diario, habla antes con tu médico o tu farmacéutico. Dejar el alcohol de golpe puede ser peligroso si hay dependencia.', TABACO:'Si fumas a diario, tu médico o tu farmacéutico te pueden ayudar a dejarlo.', CANNABIS:'Aquí no hay juicio, solo sí o no. Si te cuesta mucho, tu médico te puede ayudar.', APUESTAS:'Si apuestas a menudo y te cuesta parar, pide ayuda: no hace falta hacerlo solo.'};
-function retoDef(n){ for(var i=0;i<RETOS.length;i++){ if(RETOS[i].n===n) return RETOS[i]; } return null; }
+function retoDef(n){ n=RETO_ALIAS[n]||n; for(var i=0;i<RETOS.length;i++){ if(RETOS[i].n===n) return RETOS[i]; } return null; }
 function retosActivos(f){ f=f||hoy(); return D.retos.filter(function(r){ return !r.fin && r.ini<=f; }).concat(D.retos.filter(function(r){ return !r.fin && r.ini>f; })); }
 function diaReto(r,f){ return entre(r.ini,f)+1; }
 function okReto(r,f){ var R=retoDef(r.n); if(!R) return false;
   if(R.auto==='gym') return entrenoEl(f) || !!((D.dias[f]||{h:{}}).h.entreno);
   if(R.auto==='pasos'){ var d=D.dias[f]; return !!(d && d.pasos>=8000); }
+  if(R.auto==='agua') return vasosDia(r,f)>=8;
+  if(R.auto==='buenas') return buenasDia(r,f).length>=3;
+  if(retoLibre(r,f)) return false;
   var d2=D.dias[f]; return !!(d2 && d2.retos && d2.retos[r.id]==='si'); }
 function hechosReto(r){ var n=0, fin=sumar(r.ini, r.total-1); for(var f=r.ini; f<=hoy() && f<=fin; f=sumar(f,1)){ if(okReto(r,f)) n++; } return n; }
 function evaluarRetos(){ D.retos.forEach(function(r){ if(r.fin) return; var fin=sumar(r.ini,r.total-1), h=hechosReto(r);
@@ -684,25 +695,25 @@ function evaluarRetos(){ D.retos.forEach(function(r){ if(r.fin) return; var fin=
     if(r.fin==='ok') setTimeout(function(){ celebrar({tipo:'hito', eyebrow:'Reto completado', titulo:'¡Reto superado!', sub:r.n+': '+h+' de '+r.total+' días.', frase:frase2('Completa un reto',{reto:'«'+r.n+'»', hecho:String(h), meta:String(r.vale)})||'Reto superado. A por otro cuando quieras.', toast:'Reto superado: '+r.n+'.'}); }, 400); decir(frase(r.fin==='ok'?'Completa un reto':'No completa un reto',{reto:'«'+r.n+'»', hecho:String(h), meta:String(r.vale), 'días':String(h)}) || (r.fin==='ok'?'Reto completado: '+r.n.toLowerCase()+'.':'El reto «'+r.n.toLowerCase()+'» no ha salido esta vez. Se puede volver a empezar.'), hoy()); } }); }
 function filaReto(r,f){ var R=retoDef(r.n), emp = r.ini<=f, sub = emp ? 'Día '+diaReto(r,f)+' de '+r.total+' · te valen '+r.vale : 'Empieza '+(r.ini===sumar(f,1)?'mañana':fechaLarga(r.ini).toLowerCase());
   var hoyOk = emp && okReto(r,f);
-  return '<button type="button" class="fila'+(hoyOk?' on':'')+'" data-a="verReto" data-v="'+r.id+'"><span class="bx" aria-hidden="true" style="font-size:13px">'+hechosReto(r)+'/'+r.vale+'</span><span class="col" style="gap:2px;flex:1;min-width:0"><span class="lbl">RETO'+(R?' · '+R.tema:'')+'</span><strong style="font-size:15px">'+e(r.n)+'</strong><span style="font-size:13px;color:var(--text2)">'+sub+'</span></span><span style="color:var(--text3);align-self:center">'+ic('chev',16)+'</span></button>'; }
-var TEMA_AREA = {'MÓVIL':'movil','ENTRENO':'entreno','MOVERME':'moverme','SUEÑO':'sueno','MENTE':'leer','COMIDA':'comida'};
+  return '<button type="button" class="fila'+(hoyOk?' on':'')+'" data-a="verReto" data-v="'+r.id+'"><span class="bx" aria-hidden="true" style="font-size:13px">'+hechosReto(r)+'/'+r.vale+'</span><span class="col" style="gap:2px;flex:1;min-width:0"><span class="lbl">RETO'+(R?' · '+R.tema:'')+'</span><strong style="font-size:15px">'+e(nombreReto(r))+'</strong><span style="font-size:13px;color:var(--text2)">'+sub+'</span></span><span style="color:var(--text3);align-self:center">'+ic('chev',16)+'</span></button>'; }
+var TEMA_AREA = {'MÓVIL':'movil','ENTRENO':'entreno','MOVERME':'moverme','SUEÑO':'sueno','MENTE':'leer','COMIDA':'comida','ESTUDIO':'estudio','ÁNIMO':'animo'};
 var TEMA_DEJAR = {alcohol:'ALCOHOL',tabaco:'TABACO',porros:'CANNABIS',apuestas:'APUESTAS',energeticas:'BEBIDAS'};
 function retosParaTi(){ var p=D.perfil, out=[];
   RETOS.forEach(function(R,i){ if(retosActivos().some(function(x){ return x.n===R.n; })) return;
-    var a=TEMA_AREA[R.tema], ok = (a && (p.areas.indexOf(a)!==-1 || (a==='leer' && p.areas.indexOf('estudio')!==-1))) || (p.dejar && TEMA_DEJAR[p.dejar.que]===R.tema);
+    var a=TEMA_AREA[R.tema], ok = (a && (p.areas.indexOf(a)!==-1 || (a==='leer' && p.areas.indexOf('estudio')!==-1))) || (p.dejar && TEMA_DEJAR[p.dejar.que]===R.tema) || (p.dejar && p.dejar.que==='otra' && R.k==='otra');
     if(!ok && p.base){ if(R.tema==='MÓVIL' && +p.base.movil>=4) ok=true; if(R.tema==='SUEÑO' && +p.base.sueno<=5) ok=true; if(R.tema==='MOVERME' && +p.base.pasos===3000) ok=true; if(R.tema==='COMIDA' && (p.base.comida==='mal'||p.base.comida==='regular')) ok=true; }
     if(ok) out.push(i); });
   return out.slice(0,4); }
 function tarjetaReto(i){ var R=RETOS[i]; return '<button type="button" class="tile reto-t" data-a="nuevoReto" data-v="'+i+'"><span class="tt" style="color:var(--text3)">'+R.tema+'</span><span class="v2" style="position:relative;line-height:1.25">'+R.n+'</span><span class="s2" style="position:relative">'+R.total+' días · te valen '+R.vale+'</span></button>'; }
 V.retos = function(){ var a='', l='', hist='', f=hoy(), pt=retosParaTi(), temas=[], ch='';
   retosActivos().forEach(function(r){ var R=retoDef(r.n)||{}, h=hechosReto(r), emp=r.ini<=f, d=D.dias[f]||{}, v=(d.retos||{})[r.id], pr=Math.min(100,Math.round(h/r.vale*100));
-    var rapido = (emp && !R.auto) ? '<div class="row" style="gap:8px"><span style="flex:1;font-size:14px;font-weight:700">'+R.q+'</span><button type="button" class="chip'+(v==='si'?' on':'')+'" data-a="retoRapido" data-v="'+r.id+'.si" aria-pressed="'+(v==='si')+'">Sí</button><button type="button" class="chip'+(v==='no'?' on2':'')+'" data-a="retoRapido" data-v="'+r.id+'.no" aria-pressed="'+(v==='no')+'">No</button></div>' : '';
-    a+='<div class="box col reto-act" style="padding:12px 14px;gap:10px;border:var(--lleno)"><button type="button" class="row" style="gap:12px;border:none;background:none;padding:0;text-align:left;width:100%" data-a="verReto" data-v="'+r.id+'"><span class="col" style="flex:1;gap:3px;min-width:0"><span class="lbl acc">'+(emp?'Día '+diaReto(r,f)+' de '+r.total:'Empieza '+(r.ini===sumar(f,1)?'mañana':fechaCorta(r.ini)))+'</span><strong style="font-size:16px">'+e(r.n)+'</strong></span><span class="num'+(U.recienReto===r.id?' gol':'')+'" style="font-size:32px">'+h+'/'+r.vale+'</span></button><div class="mbar"><span class="llena" style="--w:'+pr+'%"></span></div>'+rapido+'</div>'; });
+    var rapido = (emp && !R.auto && !retoLibre(r,f)) ? '<div class="row" style="gap:8px"><span style="flex:1;font-size:14px;font-weight:700">'+qReto(r,R)+'</span><button type="button" class="chip'+(v==='si'?' on':'')+'" data-a="retoRapido" data-v="'+r.id+'.si" aria-pressed="'+(v==='si')+'">Sí</button><button type="button" class="chip'+(v==='no'?' on2':'')+'" data-a="retoRapido" data-v="'+r.id+'.no" aria-pressed="'+(v==='no')+'">No</button></div>' : '';
+    a+='<div class="box col reto-act" style="padding:12px 14px;gap:10px;border:var(--lleno)"><button type="button" class="row" style="gap:12px;border:none;background:none;padding:0;text-align:left;width:100%" data-a="verReto" data-v="'+r.id+'"><span class="col" style="flex:1;gap:3px;min-width:0"><span class="lbl acc">'+(emp?'Día '+diaReto(r,f)+' de '+r.total:'Empieza '+(r.ini===sumar(f,1)?'mañana':fechaCorta(r.ini)))+'</span><strong style="font-size:16px">'+e(nombreReto(r))+'</strong>'+retoResumen(r)+'</span><span class="num'+(U.recienReto===r.id?' gol':'')+'" style="font-size:32px">'+h+'/'+r.vale+'</span></button><div class="mbar"><span class="llena" style="--w:'+pr+'%"></span></div>'+rapido+'</div>'; });
   U.recienReto=null;
   RETOS.forEach(function(R){ if(temas.indexOf(R.tema)===-1) temas.push(R.tema); });
   var tf=U.temaReto||'Todos'; ['Todos'].concat(temas).forEach(function(t){ ch+='<button type="button" class="chip'+(tf===t?' on':'')+'" aria-pressed="'+(tf===t)+'" data-a="temaReto" data-v="'+t+'">'+cap(t.toLowerCase())+'</button>'; });
   RETOS.forEach(function(R,i){ if(retosActivos().some(function(x){ return x.n===R.n; })) return; if(tf!=='Todos' && R.tema!==tf) return; if(tf==='Todos' && pt.indexOf(i)!==-1) return; l+=tarjetaReto(i); });
-  D.retos.filter(function(r){ return r.fin; }).slice(-5).reverse().forEach(function(r){ hist+='<div class="it" style="cursor:default"><span class="l">'+e(r.n)+'</span><span class="v">'+(r.fin==='ok'?'Superado':'No salió')+' · '+hechosReto(r)+'/'+r.vale+'</span></div>'; });
+  D.retos.filter(function(r){ return r.fin; }).slice(-5).reverse().forEach(function(r){ hist+='<div class="it" style="cursor:default"><span class="l">'+e(nombreReto(r))+'</span><span class="v">'+(r.fin==='ok'?'Superado':'No salió')+' · '+hechosReto(r)+'/'+r.vale+'</span></div>'; });
   var superados=D.retos.filter(function(r){ return r.fin==='ok'; }).length;
   return '<div class="row sb"><h1 class="h1 m">Retos</h1>'+(superados?'<span class="col" style="align-items:flex-end;gap:0"><span class="num acc" style="font-size:28px">'+superados+'</span><span class="lbl">Superados</span></span>':'')+'</div>'+
   '<p class="p2" style="margin-top:-6px">Cortos, con principio y fin, y con margen: un mal día no lo rompe.</p>'+
@@ -715,17 +726,17 @@ V.nuevoReto = function(){ var R=RETOS[U.nuevoReto.i], ini='', av=AVISO_SALUD[R.t
   [['hoy','Hoy'],['manana','Mañana']].forEach(function(x){ ini+=opt(x[1], U.nuevoReto.cuando===x[0],'retoCuando',x[0],'c'); });
   return headLbl('Reto · '+R.tema.toLowerCase())+'<h1 class="h1" style="font-size:46px;margin-top:-6px">'+R.n+'.</h1>'+
   '<section class="score s" aria-label="Cómo es el reto"><div><span class="lbl">Dura</span><span class="num">'+R.total+' DÍAS</span></div><div><span class="lbl">Te valen</span><span class="num acc">'+R.vale+'</span></div><div><span class="lbl">Cuenta</span><span class="num">'+(R.auto?'SOLO':'SÍ / NO')+'</span></div></section>'+
-  '<p class="p2">'+(R.auto ? R.q : 'Cada noche, al cerrar el día: «'+R.q+'» Sí o no, y listo.')+' Un mal día no lo tira todo.</p>'+
+  '<p class="p2">'+(R.auto ? R.q : 'Cada noche, al cerrar el día: «'+R.q+'» Sí o no, y listo.')+' Un mal día no lo tira todo.'+(R.dejar?' Llevarás un reloj con el tiempo que llevas sin hacerlo.':'')+'</p>'+
   (av?'<div class="box row" style="padding:12px 14px;align-items:flex-start"><span style="flex-shrink:0;margin-top:1px">'+ic('info',20,2.2)+'</span><p style="margin:0;font-size:14px;line-height:1.45">'+av+'</p></div>':'')+
-  '<div class="sec"><span class="lbl">¿Cuándo empiezas?</span><div class="grid2">'+ini+'</div></div><div class="fill"></div>'+cta('EMPEZAR EL RETO','empezarReto'); };
+  retoPreguntas()+'<div class="sec"><span class="lbl">¿Cuándo empiezas?</span><div class="grid2">'+ini+'</div></div><div class="fill"></div>'+cta('EMPEZAR EL RETO','empezarReto','','',retoCfgOk()?'':'off'); };
 V.reto = function(){ var r=D.retos.filter(function(x){ return x.id===U.retoSel; })[0]; if(!r) return head('Reto');
   var R=retoDef(r.n)||{q:''}, f=hoy(), cel='', h=hechosReto(r), emp=r.ini<=f;
-  for(var i=0;i<Math.min(r.total,35);i++){ var x=sumar(r.ini,i), cls = x>f ? 'fut' : (okReto(r,x)?'si':'no'); if(x===f) cls+=' hoy'; cel+='<span class="cell '+cls+'">'+(cls.indexOf('si')===0?ic('check',14,3):(i+1))+'</span>'; }
+  for(var i=0;i<Math.min(r.total,35);i++){ var x=sumar(r.ini,i), cls = x>f ? 'fut' : (okReto(r,x)?'si':(retoLibre(r,x)?'libre':'no')); if(x===f) cls+=' hoy'; cel+='<span class="cell '+cls+'">'+(cls.indexOf('si')===0?ic('check',14,3):(i+1))+'</span>'; }
   var falta=Math.max(0,r.vale-h), txt = !emp ? 'Empieza '+(r.ini===sumar(f,1)?'mañana':fechaLarga(r.ini).toLowerCase())+'.' : (falta ? 'Te valen '+r.vale+' de '+r.total+'. Te faltan '+falta+'.' : 'Ya lo tienes: '+r.vale+' de '+r.total+'. Lo que venga, suma.');
-  var hoyR = (emp && !R.auto) ? (function(){ var d=D.dias[f]||{}, v=(d.retos||{})[r.id]; var b=''; [['si','Sí'],['no','No']].forEach(function(o){ b+=opt(o[1], v===o[0],'retoHoy',o[0],'c'); }); return '<div class="box col" style="padding:12px 14px;gap:10px;border:var(--lleno)"><span class="lbl acc">Hoy</span><strong style="font-size:16px">'+R.q+'</strong><div class="grid2">'+b+'</div></div>'; })() : '';
-  return headLbl('Reto · '+(R.tema||'').toLowerCase())+'<h1 class="h1" style="font-size:44px;margin-top:-6px">'+e(r.n)+'.</h1>'+
-  '<section class="box col" style="padding:14px;gap:12px" aria-label="Cómo vas"><div class="row sb" style="align-items:baseline"><span class="num acc" style="font-size:44px">'+h+' DE '+r.vale+'</span><span class="lbl">Cumplidos</span></div><div class="grid7">'+cel+'</div><p class="p2" style="font-size:14px">'+txt+'</p></section>'+
-  hoyR+(R.auto?'<p class="nota">'+R.q+'</p>':'')+
+  var hoyR = (emp && !R.auto && !retoLibre(r,f) && !r.fin) ? (function(){ var d=D.dias[f]||{}, v=(d.retos||{})[r.id]; var b=''; [['si','Sí'],['no','No']].forEach(function(o){ b+=opt(o[1], v===o[0],'retoHoy',o[0],'c'); }); return '<div class="box col" style="padding:12px 14px;gap:10px;border:var(--lleno)"><span class="lbl acc">Hoy</span><strong style="font-size:16px">'+qReto(r,R)+'</strong><div class="grid2">'+b+'</div></div>'; })() : '';
+  return headLbl('Reto · '+(R.tema||'').toLowerCase())+'<h1 class="h1" style="font-size:44px;margin-top:-6px">'+e(nombreReto(r))+'.</h1>'+
+  retoPanel(r)+hoyR+'<section class="box col" style="padding:14px;gap:12px" aria-label="Cómo vas"><div class="row sb" style="align-items:baseline"><span class="num acc" style="font-size:44px">'+h+' DE '+r.vale+'</span><span class="lbl">Cumplidos</span></div><div class="grid7">'+cel+'</div><p class="p2" style="font-size:14px">'+txt+'</p></section>'+
+  (R.auto?'<p class="nota">'+R.q+'</p>':'')+
   (AVISO_SALUD[R.tema]?'<div class="box row" style="padding:12px 14px;align-items:flex-start"><span style="flex-shrink:0;margin-top:1px">'+ic('info',20,2.2)+'</span><p style="margin:0;font-size:14px;line-height:1.45">'+AVISO_SALUD[R.tema]+'</p></div>':'')+
   '<button type="button" class="link" data-a="dejarReto" data-v="'+r.id+'">Dejar el reto</button>'; };
 
@@ -1396,6 +1407,420 @@ function figuraAlDia(){
 }
 
 /* =========================================================
+   Parte 9: estadísticas de los retos.
+   Cada reto tiene su tipo (R.k), dos preguntas al empezar (r.cfg)
+   y una tarjeta con sus cifras. Reloj solo en los de dejar algo.
+   Lo acumulado nunca baja: una recaída solo reinicia el reloj.
+   Detalle de lo decidido: claude/estadisticas-retos.md
+   ========================================================= */
+var DIA_MS = 86400000, HORA_MS = 3600000, MIN_MS = 60000;
+var VALK = {redes:1, estudio:1, paginas:1};          // retos que preguntan una cifra al cumplirlos
+var EQ_EUR = [[10,'una entrada de cine'],[25,'una cena'],[40,'un mes de gimnasio'],[80,'unas zapatillas'],[150,'unos auriculares buenos'],[300,'un viaje a Roma'],[600,'un móvil nuevo'],[1000,'una semana de vacaciones'],[2000,'un viaje a Japón']];
+var TAGS_BUENAS = [['gente','Gente','#5B8CFF'],['logro','Un logro','#FFD60A'],['salud','Salud','#3DDC84'],['placer','Un pequeño placer','#FF7A59'],['aprendi','Algo que aprendí','#B45BFF']];
+
+function eur(x){ return (Math.round(x*100)/100).toFixed(2).replace('.',',')+' €'; }
+function eur0(x){ return x>=100 ? num(Math.round(x))+' €' : eur(x); }
+function kReto(r){ var R=retoDef(r.n); return (R&&R.k)||''; }
+function cfgR(r){ return r.cfg||{}; }
+function edadP(){ var e1=D.perfil && +D.perfil.edad; return e1>0 ? e1 : 25; }
+function inicioDia(f){ return deIso(f).getTime(); }
+function dowIdx(f){ return (deIso(f).getDay()+6)%7; }
+function minHora(h){ if(!h) return null; var p=String(h).split(':'), m=(+p[0])*60+(+p[1]||0); if(+p[0]<12) m+=1440; return m; }
+function finReto(r){ return sumar(r.ini, r.total-1); }
+function limiteReto(r){ var fin=finReto(r), f=hoy(); return f<fin ? f : fin; }
+
+function nombreReto(r){ var c=cfgR(r), k=kReto(r);
+  if(k==='otra' && c.nombre) return cap(c.nombre);
+  if(k==='estudio' && c.que) return 'Estudiar '+c.que;
+  return r.n; }
+function sinTxt(nom){ nom=String(nom||'').trim(); if(!nom) return 'sin eso'; return /^sin\b/i.test(nom) ? nom.charAt(0).toLowerCase()+nom.slice(1) : 'sin '+nom; }
+function qReto(r, R){ R=R||retoDef(r.n)||{q:''}; var c=cfgR(r);
+  switch(R.k){
+    case 'otra': return '¿Hoy, '+sinTxt(c.nombre)+'?';
+    case 'dormir': return c.hora ? '¿Anoche estabas en la cama antes de las '+c.hora+'?' : R.q;
+    case 'levantarse': return c.hora ? '¿Hoy te has levantado a las '+c.hora+'?' : R.q;
+    case 'estudio': return '¿Hoy has estudiado'+(c.que?' '+c.que:'')+'?';
+    case 'pantalla': return c.meta ? '¿Hoy, menos de '+c.meta+' h de pantalla?' : R.q;
+    case 'bebidas': return c.que==='energeticas' ? '¿Hoy, sin energéticas?' : (c.que==='refrescos' ? '¿Hoy, sin refrescos?' : R.q);
+  }
+  return R.q; }
+function retoLibre(r, f){ var c=cfgR(r); return kReto(r)==='estudio' && c.dias && c.dias.length && c.dias.indexOf(dowIdx(f))===-1; }
+function desdeReto(r){ return r.desde || inicioDia(r.ini); }
+
+/* ---------- preguntas al empezar (y en "Cambiar") ---------- */
+function opsH(lista){ return lista.map(function(x){ return [x,x]; }); }
+var PREG_RETO = {
+  cama:[{id:'min',t:'¿Cuánto tiempo sueles estar con el móvil en la cama?',ops:[[15,'15 min'],[30,'30 min'],[45,'45 min'],[60,'1 h'],[90,'1 h 30 o más']],def:30},
+        {id:'dormir',t:'¿A qué hora te dormías?',op:1,ops:opsH(['23:00','00:00','00:30','01:00','01:30','02:00'])}],
+  redes:[{id:'antes',t:'¿Cuánto rato de redes solías pasar por la mañana?',ops:[[15,'15 min'],[30,'30 min'],[45,'45 min'],[60,'1 h'],[90,'1 h 30']],def:30},
+         {id:'hacer',t:'¿Qué vas a hacer en ese rato?',op:1,ops:[['desayunar','Desayunar tranquilo'],['entrenar','Entrenar'],['estudiar','Estudiar o leer'],['otra','Otra cosa']]}],
+  pasos:[{id:'antes',t:'¿Cuántos pasos hacías normalmente?',ops:[[3000,'3.000'],[5000,'5.000'],[7000,'7.000'],[9000,'9.000']],def:5000},
+         {id:'altura',t:'¿Cuánto mides? Para que los km sean reales.',ops:[[155,'155'],[160,'160'],[165,'165'],[170,'170'],[175,'175'],[180,'180'],[185,'185'],[190,'190'],[195,'195+']],def:175,u:'cm'},
+         {id:'peso',t:'¿Cuánto pesas? Para las calorías.',op:1,ops:[[55,'55'],[60,'60'],[65,'65'],[70,'70'],[75,'75'],[80,'80'],[85,'85'],[90,'90'],[100,'100'],[110,'110+']],u:'kg'}],
+  levantarse:[{id:'hora',t:'¿A qué hora quieres levantarte?',ops:opsH(['06:00','06:30','07:00','07:30','08:00','08:30','09:00']),def:'07:30'},
+              {id:'antes',t:'¿Y a qué hora te levantabas antes?',op:1,ops:[[0,'Igual'],[30,'30 min más tarde'],[60,'1 h más tarde'],[90,'1 h 30 más tarde'],[120,'2 h o más']]}],
+  mochila:[{id:'eur',t:'¿Cuánto gastas cada vez que comes fuera?',ops:[[5,'5 €'],[8,'8 €'],[10,'10 €'],[12,'12 €'],[15,'15 €'],[20,'20 €']],def:10}],
+  bolleria:[{id:'tipo',t:'¿Qué solías pillar?',ops:[['dulce','Bollería'],['frito','Fritos'],['ambos','Las dos']],def:'ambos'},
+            {id:'eur',t:'¿Cuánto te costaba cada vez?',ops:[[1,'1 €'],[1.5,'1,50 €'],[2,'2 €'],[3,'3 €'],[4,'4 €']],def:2}],
+  alcohol:[{id:'n',t:'¿Cuántas bebidas tomabas a la semana?',ops:[[2,'2'],[4,'4'],[6,'6'],[8,'8'],[12,'12'],[16,'16'],[20,'20'],[30,'30 o más']],def:8},
+           {id:'eur',t:'¿Cuánto cuesta cada una de media?',ops:[[1.5,'1,50 €'],[2,'2 €'],[3,'3 €'],[4,'4 €'],[5,'5 €'],[7,'7 €']],def:3}],
+  tabaco:[{id:'tipo',t:'¿Qué es lo tuyo?',ops:[['cig','Cigarrillos'],['vaper','Vaper']],def:'cig'},
+          {id:'n',t:function(c){ return c.tipo==='vaper'?'¿Cuántos pods a la semana?':'¿Cuántos cigarrillos al día?'; },
+           ops:function(c){ return c.tipo==='vaper'?[[1,'1'],[2,'2'],[3,'3'],[5,'5'],[7,'7']]:[[3,'3'],[5,'5'],[10,'10'],[15,'15'],[20,'20'],[30,'30']]; },def:10},
+          {id:'precio',t:function(c){ return c.tipo==='vaper'?'¿Cuánto cuesta un pod?':'¿Cuánto cuesta la cajetilla?'; },
+           ops:function(c){ return c.tipo==='vaper'?[[2,'2 €'],[3,'3 €'],[4,'4 €'],[5,'5 €']]:[[5,'5 €'],[5.5,'5,50 €'],[6,'6 €'],[6.5,'6,50 €']]; },def:5.5}],
+  bebidas:[{id:'que',t:'¿Qué dejas?',ops:[['energeticas','Energéticas'],['refrescos','Refrescos'],['ambos','Las dos']],def:'energeticas'},
+           {id:'n',t:'¿Cuántas tomabas a la semana?',ops:[[2,'2'],[4,'4'],[7,'7'],[10,'10'],[14,'14'],[21,'21']],def:7},
+           {id:'tam',t:'¿Lata normal o grande?',ops:[['normal','Normal'],['grande','Grande']],def:'normal'},
+           {id:'precio',t:'¿Cuánto cuesta cada una?',ops:[[1,'1 €'],[1.5,'1,50 €'],[2,'2 €'],[2.5,'2,50 €'],[3,'3 €']],def:1.5}],
+  porros:[{id:'n',t:'¿Cuántos a la semana?',ops:[[1,'1'],[3,'3'],[5,'5'],[7,'7'],[14,'14'],[21,'21 o más']],def:5},
+          {id:'mes',t:'¿Cuánto gastabas al mes en eso?',ops:[[10,'10 €'],[20,'20 €'],[40,'40 €'],[60,'60 €'],[100,'100 €'],[150,'150 €']],def:40}],
+  apuestas:[{id:'sem',t:'¿Cuánto dinero apostabas a la semana?',ops:[[10,'10 €'],[20,'20 €'],[50,'50 €'],[100,'100 €'],[200,'200 €'],[500,'500 €']],def:50},
+            {id:'perd',t:'¿Cuánto calculas que perdías a la semana?',ops:[[5,'5 €'],[10,'10 €'],[25,'25 €'],[50,'50 €'],[100,'100 €'],[250,'250 €']],def:25}],
+  unas:[{id:'veces',t:'¿Cuántas veces al día te las muerdes?',op:1,ops:[[3,'Unas 3'],[5,'Unas 5'],[10,'Unas 10'],[20,'Muchas']]},
+        {id:'cuando',t:'¿Cuándo te pasa más?',op:1,ops:[['nervios','Con nervios'],['movil','Con el móvil'],['estudiando','Estudiando'],['tele','Viendo algo']]}],
+  estudio:[{id:'que',t:'¿Qué quieres estudiar?',tipo:'txt',ph:'Por ejemplo, Matemáticas o inglés'},
+           {id:'min',t:'¿Cuántos minutos al día?',ops:[[15,'15'],[25,'25'],[30,'30'],[45,'45'],[60,'1 h'],[90,'1 h 30'],[120,'2 h']],def:30},
+           {id:'dias',t:'¿Qué días?',tipo:'dias',def:[0,1,2,3,4]}],
+  dormir:[{id:'hora',t:'¿A qué hora quieres estar en la cama?',ops:opsH(['22:30','23:00','23:30','00:00','00:30','01:00']),def:'23:30'},
+          {id:'antes',t:'¿A qué hora te acostabas antes?',ops:opsH(['00:00','00:30','01:00','01:30','02:00','02:30']),def:'01:00'}],
+  pantalla:[{id:'antes',t:'¿Cuántas horas de pantalla tienes ahora al día? Lo ves en Ajustes del iPhone → Tiempo de uso.',ops:[[3,'3 h'],[4,'4 h'],[5,'5 h'],[6,'6 h'],[7,'7 h'],[8,'8 h'],[10,'10 h']],def:5},
+            {id:'meta',t:'¿Por debajo de cuántas horas quieres estar?',ops:[[1,'1 h'],[2,'2 h'],[3,'3 h'],[4,'4 h'],[5,'5 h'],[6,'6 h']],def:3}],
+  compras:[{id:'mes',t:'¿Cuánto gastabas al mes en caprichos?',ops:[[20,'20 €'],[50,'50 €'],[100,'100 €'],[150,'150 €'],[200,'200 €'],[300,'300 €'],[500,'500 €']],def:100},
+           {id:'donde',t:'¿Dónde caes más?',op:1,ops:[['online','Comprando online'],['tiendas','En tiendas'],['comida','Comida a domicilio'],['todo','De todo un poco']]}],
+  otra:[{id:'nombre',t:'¿Cómo se llama tu reto?',tipo:'txt',ph:'Por ejemplo, Sin TikTok'},
+        {id:'veces',t:'¿Cuántas veces lo hacías?',ops:[[1,'1 al día'],[3,'3 al día'],[5,'5 al día'],[10,'10 al día'],[2/7,'2 a la semana'],[5/7,'5 a la semana']],def:1},
+        {id:'eur',t:'¿Te cuesta dinero cada vez?',ops:[[0,'No'],[1,'1 €'],[2,'2 €'],[3,'3 €'],[5,'5 €'],[10,'10 €']],def:0}]
+};
+function pregDe(k){ return PREG_RETO[k]||[]; }
+function cfgDefecto(k){ var c={}; pregDe(k).forEach(function(q){ if(q.def!==undefined) c[q.id]= Array.isArray(q.def)? q.def.slice() : q.def; }); return c; }
+function retoCfgOk(){ var k=U.rqK, c=U.rq||{}; return pregDe(k).every(function(q){ return q.tipo!=='txt' || String(c[q.id]||'').trim(); }) && !(k==='estudio' && !(c.dias&&c.dias.length)) && !(k==='pantalla' && +c.meta>=+c.antes); }
+function retoPreguntas(){ var k=U.rqK, c=U.rq||{}, h='';
+  pregDe(k).forEach(function(q){ var t=typeof q.t==='function'?q.t(c):q.t, inner='';
+    if(q.tipo==='txt') inner='<input id="in-rq-'+q.id+'" class="input" type="text" maxlength="40" placeholder="'+e(q.ph||'')+'" value="'+e(c[q.id]||'')+'" data-in="rq.'+q.id+'">';
+    else if(q.tipo==='dias'){ var d=''; DIAS_C.forEach(function(x,i){ d+=opt('<span class="num" style="font-size:20px">'+x+'</span>', (c.dias||[]).indexOf(i)!==-1,'rqDia',String(i),'c'); }); inner='<div class="grid7" style="gap:6px">'+d+'</div>'; }
+    else { var ops=typeof q.ops==='function'?q.ops(c):q.ops, b='';
+      ops.forEach(function(o){ b+='<button type="button" class="chip'+(c[q.id]===o[0]?' on':'')+'" aria-pressed="'+(c[q.id]===o[0])+'" data-a="rq" data-v="'+e(q.id+'|'+JSON.stringify(o[0]))+'">'+o[1]+(q.u?' '+q.u:'')+'</button>'; });
+      inner='<div class="chips">'+b+'</div>'; }
+    h+='<div class="sec rq"><span class="rq-t">'+t+(q.op?' <span class="rq-op">Opcional</span>':'')+'</span>'+inner+'</div>'; });
+  if(k==='pantalla' && +c.meta>=+c.antes) h+='<p class="nota">La meta tiene que ser menos de lo que tienes ahora.</p>';
+  return h ? '<div class="col rq-caja" style="gap:14px"><span class="lbl acc">Para tus estadísticas</span>'+h+'<p class="nota" style="margin:0">Con esto calculo tus cifras. Lo puedes cambiar cuando quieras.</p></div>' : ''; }
+V.retoCfg = function(){ var r=D.retos.filter(function(x){ return x.id===U.retoSel; })[0]; if(!r) return head('Reto');
+  return headLbl('Reto · '+e(nombreReto(r).toLowerCase()))+'<h1 class="h1" style="font-size:40px;margin-top:-6px">Tus respuestas.</h1>'+retoPreguntas()+'<div class="fill"></div>'+cta('GUARDAR','retoCfgOk','',ic('check'),retoCfgOk()?'':'off'); };
+
+/* ---------- datos de cada día ---------- */
+function valDia(r, f){ var d=D.dias[f], v=d&&d.rv&&d.rv[r.id]; if(v!=null) return v; var c=cfgR(r), k=kReto(r);
+  if(k==='redes') return +c.antes||30; if(k==='estudio') return +c.min||30; if(k==='paginas') return 10; return 0; }
+function diasSi(r){ var out=[], lim=limiteReto(r); for(var f=r.ini; f<=lim; f=sumar(f,1)) if(okReto(r,f)) out.push(f); return out; }
+function rachaReto(r){ var n=0, f=limiteReto(r); if(f<r.ini) return 0; if(!okReto(r,f) && f===hoy()) f=sumar(f,-1);
+  while(f>=r.ini){ if(retoLibre(r,f)){ f=sumar(f,-1); continue; } if(okReto(r,f)){ n++; f=sumar(f,-1); } else break; } return n; }
+function mejorRachaReto(r){ var m=0, n=0, lim=limiteReto(r); for(var f=r.ini; f<=lim; f=sumar(f,1)){ if(retoLibre(r,f)) continue; if(okReto(r,f)){ n++; if(n>m) m=n; } else if(f!==hoy()) n=0; } return m; }
+function evDe(r, tipo, f){ return (r.ev||[]).filter(function(x){ return x.k===tipo && (!f || x.f===f); }); }
+function vasosDia(r, f){ return evDe(r,'vaso',f).length; }
+function buenasDia(r, f){ var x=evDe(r,'buenas',f)[0]; return x ? x.c : []; }
+
+/* ---------- ritmo de lo que se deja (por día) ---------- */
+function vidaAlcoholDia(n){ var g=n*10, L = g<100?0 : (g<200?0.5 : (g<350?1.5:4.5)), R=Math.max(10, 80-edadP()); return L/R*1440; } // minutos de vida por día sin beber
+function tasa(r){ var c=cfgR(r), k=kReto(r);
+  switch(k){
+    case 'alcohol': var na=+c.n||8; return {u:na/7, p:+c.eur||3, un:['bebida','bebidas'], kcalU:150, vidaDia:vidaAlcoholDia(na)};
+    case 'tabaco': if(c.tipo==='vaper') return {u:(+c.n||3)/7, p:+c.precio||3, un:['pod','pods']};
+      return {u:+c.n||10, p:(+c.precio||5.5)/20, un:['cigarrillo','cigarrillos'], vidaU:20, tiempoU:5};
+    case 'bebidas': var lat=c.tam==='grande'?2:1, ref=c.que==='refrescos', amb=c.que==='ambos';
+      return {u:(+c.n||7)/7, p:+c.precio||1.5, un:['lata','latas'], azucarU:(ref?35:(amb?31:27))*lat, cafeU: ref?0:(amb?40:80)*lat};
+    case 'porros': var np=+c.n||5; return {u:np/7, p:(+c.mes||40)/(np*4.33), un:['porro','porros']};
+    case 'apuestas': return {u:0, p:0, eurDia:(+c.sem||50)/7, perdDia:(+c.perd||25)/7};
+    case 'unas': return {u:+c.veces||5, p:0, un:['vez','veces']};
+    case 'otra': return {u:+c.veces||1, p:+c.eur||0, un:['vez','veces']};
+    case 'compras': return {u:0, p:0};
+  }
+  return null; }
+function msLimpio(r){ var ini=desdeReto(r), now=ahora(); if(now<ini) return 0; var fin=inicioDia(sumar(finReto(r),1)); if(r.fin && now>fin) now=fin; return Math.max(0, now-ini); }
+function msTotal(r){ return (r.accMs||0)+msLimpio(r); }
+function relojTxt(ms){ var d=Math.floor(ms/DIA_MS), h=Math.floor(ms%DIA_MS/HORA_MS), m=Math.floor(ms%HORA_MS/MIN_MS); return {d:d,h:h,m:m}; }
+function durTxt(ms){ var t=relojTxt(ms); return t.d ? t.d+' d '+t.h+' h' : (t.h? t.h+' h '+pad(t.m)+' min' : t.m+' min'); }
+
+/* ---------- equivalencias ---------- */
+function temaEdad(){ var ed=edadP(), est=D.perfil && D.perfil.areas.indexOf('estudio')!==-1;
+  if(ed<18) return {m:120, s:'tema del insti', p:'temas del insti'};
+  if(ed<=25) return {m:180, s:'tema de la uni', p:'temas de la uni'};
+  if(est) return {m:180, s:'tema de tu oposición o curso', p:'temas de tu oposición o curso'};
+  return {m:120, s:'capítulo de un curso', p:'capítulos de un curso'}; }
+function eqLista(valor, lista, fmtFalta){ var on=[], prox=null; lista.forEach(function(q){ if(valor>=q[0]) on.push(q); else if(!prox) prox=q; }); return {on:on, prox:prox, falta: prox ? fmtFalta(prox[0]-valor) : ''}; }
+
+/* ---------- lo que enseña cada reto ---------- */
+function statsReto(r){
+  var k=kReto(r), c=cfgR(r), s={k:k, cards:[], eq:null, hitos:null, valor:0, reloj:null, dinero:null, calc:'', donde:'', big:null, sinCfg: !r.cfg && pregDe(k).length>0};
+  var si=diasSi(r), nSi=si.length, racha=rachaReto(r), mejor=mejorRachaReto(r);
+  function card(n,l,o){ o=o||{}; s.cards.push({n:n, l:l, acc:o.acc, est:o.est}); }
+  var T=tasa(r);
+  if(T){ // dejar algo: reloj
+    var ms=msLimpio(r), tot=msTotal(r), dias=tot/DIA_MS;
+    s.reloj=ms; s.mejor=Math.max(r.mejorMs||0, ms);
+    if(k==='compras'){ var ev=evDe(r,'compra'), sum=0; ev.forEach(function(x){ sum+=+x.eur||0; }); s.dinero=sum; s.dineroL='Te has ahorrado';
+      card(ev.length, ev.length===1?'capricho que no te has comprado':'caprichos que no te has comprado');
+      var may=ev.slice().sort(function(a,b){ return (b.eur||0)-(a.eur||0); })[0];
+      if(may) card(eur0(+may.eur), 'el mayor: '+e(may.que||'un capricho'));
+      card(durTxt(s.mejor), 'tu mejor marca');
+      s.lista=ev.slice(-5).reverse(); s.calc=eur0(+c.mes||100)+' al mes en caprichos';
+      s.donde='El dinero es la suma real de lo que has evitado: cada vez que tocas «Lo he evitado» apuntas qué era y cuánto costaba.';
+    } else if(k==='apuestas'){ s.dinero=dias*T.eurDia; s.dineroL='Dinero que no has apostado';
+      card(eur0(dias*T.perdDia), 'que no has perdido', {acc:1, est:1}); card(Math.floor(dias), Math.floor(dias)===1?'día sin apostar':'días sin apostar'); card(durTxt(s.mejor), 'tu mejor marca');
+      s.calc=eur0(+c.sem||50)+' apostados a la semana · '+eur0(+c.perd||25)+' perdidos';
+      s.donde='El dinero sale de lo que me dijiste que apostabas y perdías cada semana, repartido por días. Es tu dinero: muévelo a un ahorro si quieres verlo crecer.';
+    } else {
+      var und=dias*T.u, unN=Math.floor(und);
+      if(T.p>0){ s.dinero=und*T.p; s.dineroL='Ahorrado'; }
+      card(unN, (k==='unas'||k==='otra') ? (unN===1?'vez que no lo has hecho':'veces que no lo has hecho') : (T.un[unN===1?0:1]+' que no '+(k==='alcohol'?'has tomado':(k==='bebidas'?'te has tomado':(k==='porros'?'has fumado':(T.un[0]==='pod'?'has usado':'has fumado'))))));
+      if(T.vidaU) card(hm(und*T.vidaU), 'de vida ganada', {acc:1, est:1});
+      if(k==='alcohol'){ if(T.vidaDia>0) card(hm(dias*T.vidaDia), 'de vida ganada', {acc:1, est:1}); card(num(und*T.kcalU), 'kcal que no has tomado', {est:1}); card(Math.floor(dias), Math.floor(dias)===1?'noche sin alcohol':'noches sin alcohol'); }
+      if(T.tiempoU) card(hm(und*T.tiempoU), 'que ya no pasas fumando');
+      if(k==='bebidas'){ card(num(und*T.azucarU/4), 'terrones de azúcar que no te has tomado', {est:1}); if(T.cafeU) card(num(und*T.cafeU/1000,1)+' g', 'de cafeína menos', {est:1}); }
+      card(durTxt(s.mejor), 'tu mejor marca');
+      if(k==='alcohol') s.calc=(+c.n||8)+' bebidas a la semana · '+eur(+c.eur||3)+' cada una';
+      if(k==='tabaco') s.calc= c.tipo==='vaper' ? (+c.n||3)+' pods a la semana · '+eur(+c.precio||3)+' el pod' : (+c.n||10)+' al día · '+eur(+c.precio||5.5)+' la cajetilla';
+      if(k==='bebidas') s.calc=(+c.n||7)+' a la semana · lata '+(c.tam==='grande'?'grande':'normal')+' · '+eur(+c.precio||1.5);
+      if(k==='porros') s.calc=(+c.n||5)+' a la semana · '+eur0(+c.mes||40)+' al mes';
+      if(k==='unas') s.calc=c.veces ? 'unas '+c.veces+' veces al día' : 'unas 5 veces al día (cámbialo si quieres)';
+      if(k==='otra') s.calc=(+c.veces>=1 ? (+c.veces)+' al día' : Math.round((+c.veces||0)*7)+' a la semana')+(+c.eur?' · '+eur(+c.eur)+' cada vez':'');
+      if(k==='tabaco') s.donde= c.tipo==='vaper' ? 'Los pods y el dinero salen de lo que me dijiste. Para el vaper no hay una cifra fiable de vida, así que no la pongo.' : 'Vida ganada: cada cigarrillo que no fumas son unos 20 minutos de vida (estudio de la UCL en la revista Addiction, 2024). Es una estimación. El dinero y los cigarrillos salen de lo que me dijiste.';
+      if(k==='alcohol') s.donde= T.vidaDia>0 ? 'Vida ganada: un estudio de The Lancet (2018, casi 600.000 personas) vio que beber más de 100 g de alcohol a la semana resta esperanza de vida (de 6 meses a 5 años según la cantidad). Lo reparto según tu edad y lo que bebías. Es una estimación. Una bebida son unos 10 g de alcohol.' : 'Con lo que bebías, el estudio de The Lancet (2018) no da una cifra de vida, así que no la pongo. El resto sale de lo que me dijiste. Las calorías son aproximadas (unas 150 por bebida).';
+      if(k==='bebidas') s.donde='Azúcar y cafeína son aproximados: unos 27 g de azúcar y 80 mg de cafeína por energética normal, y unos 35 g de azúcar por refresco. Un terrón son 4 g.';
+    }
+    if(s.dinero!=null && k!=='compras') s.eq=eqLista(s.dinero, EQ_EUR, function(x){ return 'te faltan '+eur(x); });
+    if(k==='compras') s.eq=eqLista(s.dinero, EQ_EUR, function(x){ return 'te faltan '+eur(x); });
+    s.hitos={valor:ms/DIA_MS, lista:[[1,'1 día'],[3,'3 días'],[7,'1 semana'],[14,'2 semanas'],[21,'3 semanas'],[30,'1 mes'],[60,'2 meses'],[90,'3 meses'],[180,'6 meses'],[365,'1 año']], falta:function(x){ return 'te faltan '+durTxt(x*DIA_MS); }, clave:'d'};
+    return s; }
+
+  switch(k){
+    case 'cama': var mc=+c.min||30, sue=nSi*mc;
+      s.big={v:hm(sue), l:'Sueño ganado'}; card(racha, racha===1?'noche seguida':'noches seguidas'); card(nSi, nSi===1?'noche cumplida':'noches cumplidas'); card(mejor, 'mejor racha');
+      s.eq=eqLista(sue, [[90,'Una peli'],[180,'Dos pelis'],[480,'Una noche entera de sueño'],[960,'Dos noches enteras']], function(x){ return 'te faltan '+hm(x); });
+      s.hitos={valor:sue, lista:[[60,'1 h de sueño'],[180,'3 h de sueño'],[300,'5 h de sueño'],[480,'Una noche entera'],[900,'Casi dos noches']], falta:function(x){ return 'te faltan '+hm(x); }};
+      s.calc=(mc>=90?'1 h 30 o más':hm(mc))+' con el móvil en la cama cada noche'; break;
+    case 'redes': var mr=0, mejorM=0; si.forEach(function(f){ var v=valDia(r,f); mr+=v; if(v>mejorM) mejorM=v; }); var te=temaEdad();
+      s.big={v:hm(mr), l:'Minutos de vida ganados'}; card(nSi, nSi===1?'mañana sin redes':'mañanas sin redes'); card(mejorM?hm(mejorM):'—', 'tu mejor mañana'); card(num(mr/te.m,1), 'te da para '+te.p);
+      s.eq=eqLista(mr, [[te.m,'Un '+te.s],[te.m*2,'Dos '+te.p],[te.m*5,'Cinco '+te.p],[te.m*10,'Diez '+te.p]], function(x){ return 'te faltan '+hm(x); });
+      s.hitos={valor:mr, lista:[[60,'1 h ganada'],[180,'3 h ganadas'],[300,'5 h ganadas'],[600,'10 h ganadas'],[1200,'20 h ganadas']], falta:function(x){ return 'te faltan '+hm(x); }};
+      s.calc=hm(+c.antes||30)+' de redes por la mañana antes del reto'; s.donde='Suma los minutos que me dices cada día que has estado sin redes ni móvil desde que te levantas. Un '+te.s+' son unas '+hm(te.m)+' de estudio.'; break;
+    case 'gym': var ents=D.entrenos.filter(function(x){ return x.fecha>=r.ini && x.fecha<=limiteReto(r); }), kg=0;
+      ents.forEach(function(x){ try{ kg+=volumen(x.ej||[]).v; }catch(err){} });
+      var sem={}; ents.forEach(function(x){ if(x.fecha>sumar(hoy(),-7)) sem[x.fecha]=1; }); var ns=Object.keys(sem).length;
+      var ult=D.entrenos.length ? D.entrenos[D.entrenos.length-1].fecha : null;
+      s.big={v:ns+'/4', l:'Esta semana'}; card(ents.length, ents.length===1?'entreno en el reto':'entrenos en el reto'); card(num(kg)+' kg', 'movidos en el reto');
+      card(ult ? (entre(ult,hoy())===0?'Hoy':(entre(ult,hoy())===1?'Ayer':'Hace '+entre(ult,hoy())+' días')) : '—', 'tu último entreno');
+      s.hitos={valor:ents.length, lista:[[1,'1 entreno'],[4,'4 entrenos'],[8,'8 entrenos'],[12,'12 entrenos']], falta:function(x){ return 'te faltan '+x; }}; break;
+    case 'pasos': var tp=0, mejorP=0, nd=0; for(var f=r.ini; f<=limiteReto(r); f=sumar(f,1)){ var pd=(D.dias[f]||{}).pasos; if(pd){ tp+=pd; nd++; if(pd>mejorP) mejorP=pd; } }
+      var alt=+c.altura||175, peso=+c.peso||70, km=tp*alt*0.415/100000, kcal=0.5*peso*km;
+      s.big={v:num(km,1)+' km', l:'Has andado'}; card(num(tp), 'pasos en el reto'); card(num(kcal), 'kcal quemadas andando', {acc:1, est:1}); card(num(kcal/7.7)+' g', 'de grasa, en equivalencia', {est:1});
+      card(mejorP?num(mejorP):'—', 'tu mejor día'); if(nd && c.antes) card((tp/nd-c.antes>=0?'+':'')+num(tp/nd-c.antes), 'pasos al día frente a antes');
+      s.eq=eqLista(km, [[5,'Una carrera de 5 km'],[10,'Un 10K'],[21.1,'Una media maratón'],[42.2,'Una maratón'],[70,'De Madrid a Toledo'],[355,'De Madrid a Valencia']], function(x){ return 'te faltan '+num(x,1)+' km'; });
+      s.hitos={valor:km, lista:[[5,'5 km'],[10,'10 km'],[21.1,'Media maratón'],[42.2,'Una maratón'],[70,'70 km']], falta:function(x){ return 'te faltan '+num(x,1)+' km'; }};
+      s.calc=alt+' cm'+(c.peso?' · '+c.peso+' kg':' · peso medio (ponlo para afinar)')+' · antes '+num(+c.antes||5000)+' pasos';
+      s.donde='Km: largo del paso ≈ altura × 0,415. Calorías: unas 0,5 kcal por kilo de peso y km andado (lo que gastas de más por andar). Grasa: 7.700 kcal ≈ 1 kg. Son estimaciones.'; break;
+    case 'levantarse': var ga=(+c.antes||0)*nSi;
+      s.big={v:String(nSi), l:nSi===1?'Día a tu hora':'Días a tu hora'}; card(racha, racha===1?'día seguido':'días seguidos'); card(mejor,'mejor racha'); if(ga) card(hm(ga), 'de mañana ganadas', {acc:1});
+      s.hitos={valor:nSi, lista:[[3,'3 madrugones'],[5,'5 madrugones'],[7,'7 madrugones'],[14,'14 madrugones']], falta:function(x){ return 'te faltan '+x; }};
+      s.calc='a las '+(c.hora||'07:30')+(c.antes?' · antes, '+hm(+c.antes)+' más tarde':''); break;
+    case 'paginas': var pg=0, mejorPg=0; si.forEach(function(f){ var v=valDia(r,f); pg+=v; if(v>mejorPg) mejorPg=v; });
+      s.big={v:num(pg), l:'Páginas leídas'}; card(nSi, nSi===1?'día leyendo':'días leyendo'); card(racha, racha===1?'día seguido':'días seguidos'); card(mejorPg||'—','tu mejor día (páginas)');
+      s.hitos={valor:pg, lista:[[50,'50 páginas'],[100,'100 páginas'],[250,'250 páginas'],[500,'500 páginas'],[1000,'1.000 páginas']], falta:function(x){ return 'te faltan '+num(x); }}; break;
+    case 'mochila': var em=(+c.eur||10)*nSi;
+      s.dinero=em; s.dineroL='Ahorrado'; card(nSi, nSi===1?'vez que saliste preparado':'veces que saliste preparado'); card(racha, racha===1?'día seguido':'días seguidos');
+      s.eq=eqLista(em, EQ_EUR, function(x){ return 'te faltan '+eur(x); }); s.hitos={valor:nSi, lista:[[3,'3 veces'],[5,'5 veces'],[7,'7 veces']], falta:function(x){ return 'te faltan '+x; }};
+      s.calc=eur0(+c.eur||10)+' cada vez que comías fuera'; break;
+    case 'bolleria': var an=evDe(r,'antojo').length, kc=c.tipo==='frito'?300:(c.tipo==='dulce'?350:325), eb=an*(+c.eur||2);
+      s.big={v:String(an), l:an===1?'Antojo evitado':'Antojos evitados'}; card(num(an*kc), 'kcal que te has ahorrado', {acc:1, est:1}); card(num(an*kc/7.7)+' g', 'de grasa, en equivalencia', {est:1}); card(eur0(eb), 'que no te has gastado'); card(nSi, nSi===1?'día cumplido':'días cumplidos');
+      s.hitos={valor:an, lista:[[1,'Primer antojo'],[5,'5 antojos'],[10,'10 antojos'],[25,'25 antojos'],[50,'50 antojos']], falta:function(x){ return 'te faltan '+x; }};
+      s.calc=({dulce:'bollería',frito:'fritos',ambos:'bollería y fritos'}[c.tipo||'ambos'])+' · '+eur(+c.eur||2)+' cada vez';
+      s.donde='Cada antojo evitado son unas '+kc+' kcal (una ración media de '+({dulce:'bollería',frito:'fritos',ambos:'bollería o fritos'}[c.tipo||'ambos'])+'). Grasa: 7.700 kcal ≈ 1 kg. Son estimaciones.'; break;
+    case 'estudio': var me=0; si.forEach(function(f){ me+=valDia(r,f); }); var te2=temaEdad(), toca=0; for(var f2=r.ini; f2<=limiteReto(r); f2=sumar(f2,1)) if(!retoLibre(r,f2)) toca++;
+      s.big={v:hm(me), l:'Estudiado'+(c.que?' · '+e(c.que):'')}; card(nSi+'/'+toca, 'días cumplidos de los que tocaban'); card(racha, racha===1?'día seguido':'días seguidos'); card(num(me/te2.m,1), te2.p+' en equivalencia');
+      s.eq=eqLista(me, [[te2.m,'Un '+te2.s],[te2.m*3,'Tres '+te2.p],[te2.m*5,'Cinco '+te2.p],[te2.m*10,'Diez '+te2.p]], function(x){ return 'te faltan '+hm(x); });
+      s.hitos={valor:me/60, lista:[[5,'5 horas'],[10,'10 horas'],[25,'25 horas'],[50,'50 horas'],[100,'100 horas']], falta:function(x){ return 'te faltan '+hm(x*60); }};
+      s.calc=(c.que?e(c.que)+' · ':'')+hm(+c.min||30)+' · '+((c.dias||[]).map(function(i){ return DIAS_C[i]; }).join(' ')||'todos los días'); break;
+    case 'buenas': var bs=[]; (r.ev||[]).forEach(function(x){ if(x.k==='buenas') x.c.forEach(function(y){ bs.push(y); }); }); var cuenta={};
+      bs.forEach(function(y){ if(y.tag) cuenta[y.tag]=(cuenta[y.tag]||0)+1; }); var top=Object.keys(cuenta).sort(function(a,b){ return cuenta[b]-cuenta[a]; })[0];
+      s.tarro=bs; s.big={v:String(bs.length), l:bs.length===1?'Cosa buena guardada':'Cosas buenas guardadas'}; card(racha, racha===1?'día seguido':'días seguidos');
+      if(top) card(TAGS_BUENAS.filter(function(t){ return t[0]===top; })[0][1], 'lo que más te alegra');
+      var an1=animoMedio(r.ini, limiteReto(r)), an0=animoMedio(sumar(r.ini,-14), sumar(r.ini,-1)); if(an1 && an0) card((an1-an0>=0?'+':'')+num(an1-an0,1), 'de ánimo frente a antes (del 1 al 10)', {acc:an1>=an0});
+      var pasadas=(r.ev||[]).filter(function(x){ return x.k==='buenas' && x.f<hoy() && x.c.length; }); if(pasadas.length){ var sel=pasadas[(+hoy().replace(/-/g,''))%pasadas.length], cc=sel.c[0]; s.recuerdo={f:sel.f, x:cc.x}; }
+      s.hitos={valor:bs.length, lista:[[21,'21 cosas buenas'],[50,'50 cosas buenas'],[100,'100 cosas buenas'],[365,'365 cosas buenas']], falta:function(x){ return 'te faltan '+x; }}; break;
+    case 'dormir': var gd=Math.max(0,(minHora(c.antes||'01:00')||0)-(minHora(c.hora||'23:30')||0)), sg=gd*nSi;
+      s.big={v:hm(sg), l:'Sueño ganado'}; card(nSi, nSi===1?'noche a tu hora':'noches a tu hora'); card(racha, racha===1?'noche seguida':'noches seguidas'); card(mejor,'mejor racha');
+      s.eq=eqLista(sg, [[90,'Una peli'],[480,'Una noche entera de sueño'],[960,'Dos noches enteras']], function(x){ return 'te faltan '+hm(x); });
+      s.hitos={valor:nSi, lista:[[3,'3 noches'],[7,'7 noches'],[10,'10 noches'],[14,'14 noches']], falta:function(x){ return 'te faltan '+x; }};
+      s.calc='a la cama a las '+(c.hora||'23:30')+' · antes, a las '+(c.antes||'01:00'); break;
+    case 'pantalla': var gp=Math.max(0,((+c.antes||5)-(+c.meta||3))*60), hr=gp*nSi, te3=temaEdad();
+      s.big={v:hm(hr), l:'Horas recuperadas'}; card(nSi, nSi===1?'día por debajo':'días por debajo'); card(racha, racha===1?'día seguido':'días seguidos'); card(num(hr/te3.m,1), te3.p+' en equivalencia');
+      s.eq=eqLista(hr, [[120,'Una peli larga'],[te3.m*2,'Dos '+te3.p],[600,'10 h: un día de curro'],[1440,'Un día entero']], function(x){ return 'te faltan '+hm(x); });
+      s.hitos={valor:hr, lista:[[120,'2 h'],[300,'5 h'],[600,'10 h'],[1200,'20 h']], falta:function(x){ return 'te faltan '+hm(x); }};
+      s.calc=(+c.antes||5)+' h de pantalla antes · meta, menos de '+(+c.meta||3)+' h'; break;
+    case 'agua': var vs=evDe(r,'vaso'), hoyV=vasosDia(r,hoy());
+      s.big={v:num(vs.length*0.25,1)+' L', l:'Agua bebida'}; s.agua=hoyV; card(hoyV+'/8', 'vasos hoy', {acc:hoyV>=8}); card(nSi, nSi===1?'día con 2 litros':'días con 2 litros'); card(racha, racha===1?'día seguido':'días seguidos');
+      s.hitos={valor:vs.length*0.25, lista:[[10,'10 litros'],[25,'25 litros'],[50,'50 litros'],[100,'100 litros']], falta:function(x){ return 'te faltan '+num(x,1)+' L'; }}; break;
+  }
+  return s; }
+function animoMedio(a, b){ var t=0, n=0; for(var f=a; f<=b; f=sumar(f,1)){ var d=D.dias[f]; if(d && d.feliz){ t+=d.feliz; n++; } } return n>=3 ? t/n : 0; }
+
+/* ---------- logros: hitos y equivalencias, con celebración ---------- */
+function logrosReto(r, silencio){
+  if(!r || r.fin) return; var s=statsReto(r), nuevos=[]; r.vistos=r.vistos||{};
+  var primera = !r.vistosOk; r.vistosOk=1;
+  if(s.hitos){ s.hitos.lista.forEach(function(h){ var key=(s.hitos.clave==='d' ? 'd'+h[0]+'@'+desdeReto(r) : 'h'+h[0]); if(s.hitos.valor>=h[0] && !r.vistos[key]){ r.vistos[key]=1; nuevos.push({t:'hito', h:h, s:s}); } }); }
+  if(s.eq){ s.eq.on.forEach(function(q){ var key='e'+q[0]; if(!r.vistos[key]){ r.vistos[key]=1; nuevos.push({t:'eq', q:q, s:s}); } }); }
+  if(!nuevos.length) return; guardarPronto();
+  if(silencio || primera) return;
+  var x=nuevos[nuevos.length-1], nom=nombreReto(r);
+  if(x.t==='hito' && x.s.hitos.clave==='d') celebrar({tipo:'hito', eyebrow:'Reto · '+nom, titulo:x.h[1]+'.', grande:durTxt(x.s.reloj), sub:frasesDejar(r, x.s), frase:'Sigue así. Cada minuto cuenta.', toast:nom+': '+x.h[1]+'.'});
+  else if(x.t==='hito') celebrar({tipo:'hito', eyebrow:'Reto · '+nom, titulo:x.h[1]+'.', sub:x.s.big?x.s.big.l+': '+x.s.big.v+'.':'', frase:'Lo has hecho tú, día a día.', toast:nom+': '+x.h[1]+'.'});
+  else if(x.s.dinero!=null) celebrar({tipo:'hito', eyebrow:x.s.k==='compras'?'Te lo has ahorrado':'Con lo ahorrado', titulo:'¡'+cap(x.q[1])+'!', grande:eur0(x.s.dinero), sub:'Con eso te podrías pagar '+x.q[1]+'.', frase:'Dinero que se queda en tu bolsillo.', toast:'Con lo ahorrado: '+x.q[1]+'.'});
+  else celebrar({tipo:'hito', eyebrow:'Reto · '+nom, titulo:x.q[1]+'.', sub:x.s.big?x.s.big.l+': '+x.s.big.v+'.':'', frase:'Eso que has ganado ya no te lo quita nadie.', toast:nom+': '+x.q[1]+'.'});
+}
+function frasesDejar(r, s){ var c=s.cards[0]; return c ? c.n+' '+c.l+(s.dinero!=null?' y '+eur0(s.dinero):'')+'.' : ''; }
+function logrosTodos(silencio){ retosActivos().forEach(function(r){ if(r.ini<=hoy()) logrosReto(r, silencio); }); }
+
+/* ---------- lo que se pinta ---------- */
+function relojHTML(ms, id){ var t=relojTxt(ms); return '<div class="rp-reloj" data-rv="'+id+':reloj"><span class="u"><span class="n">'+t.d+'</span><span class="t">D</span></span><span class="u"><span class="n">'+pad(t.h)+'</span><span class="t">H</span></span><span class="u"><span class="n">'+pad(t.m)+'</span><span class="t">MIN</span></span></div>'; }
+function vivoHTML(r, s){ var h='';
+  if(s.reloj!=null) h+=relojHTML(s.reloj, r.id);
+  else if(s.big) h+='<div class="col" style="gap:4px"><span class="lbl">'+s.big.l+'</span><span class="num rp-big">'+s.big.v+'</span></div>';
+  if(s.dinero!=null) h+='<div class="rp-dinero"><span class="lbl">'+s.dineroL+'</span><span class="num">'+eur(s.dinero)+'</span></div>';
+  if(s.cards.length) h+='<div class="rp-grid">'+s.cards.map(function(c){ return '<div class="rp-st"><span class="num'+(c.acc?' acc':'')+'">'+c.n+'</span><span class="k">'+c.l+'</span>'+(c.est?'<span class="est">Estimación</span>':'')+'</div>'; }).join('')+'</div>';
+  return h; }
+function hitoHTML(s){ if(!s.hitos) return ''; var v=s.hitos.valor, prev=0, sig=null; for(var i=0;i<s.hitos.lista.length;i++){ if(v<s.hitos.lista[i][0]){ sig=s.hitos.lista[i]; break; } prev=s.hitos.lista[i][0]; }
+  if(!sig) return '<div class="rp-hito"><div class="mbar"><span class="llena" style="--w:100%"></span></div><div class="row sb"><span>Todos los hitos conseguidos</span><span></span></div></div>';
+  var pct=Math.max(3, Math.min(100, Math.round((v-prev)/(sig[0]-prev)*100)));
+  return '<div class="rp-hito"><div class="mbar"><span class="llena" style="--w:'+pct+'%"></span></div><div class="row sb"><span>Próximo: '+sig[1]+'</span><span>'+s.hitos.falta(sig[0]-v)+'</span></div></div>'; }
+function eqHTML(s){ if(!s.eq || (!s.eq.on.length && !s.eq.prox)) return ''; var lbl = s.dinero!=null ? (s.k==='compras'?'Con lo que no te has gastado':'Con lo ahorrado') : 'Lo que ya has ganado';
+  return '<div class="col" style="gap:8px"><span class="lbl">'+lbl+'</span><div class="rp-eq">'+s.eq.on.map(function(q){ return '<span class="on">'+cap(q[1])+'</span>'; }).join('')+(s.eq.prox?'<span class="prox">'+cap(s.eq.prox[1])+': '+s.eq.falta+'</span>':'')+'</div></div>'; }
+function tarroHTML(s){ var bs=s.tarro||[], n=bs.length, vis=bs.slice(-140), nuevos=U.tarroNuevo||0; U.tarroNuevo=0;
+  var bol=vis.map(function(y,i){ var t=TAGS_BUENAS.filter(function(x){ return x[0]===y.tag; })[0]; return '<i'+(i>=vis.length-nuevos?' class="cae" style="animation-delay:'+((i-(vis.length-nuevos))*0.12)+'s"':'')+' style="background:'+(t?t[2]:'var(--text3)')+'"></i>'; }).join('');
+  return '<div class="tarro" aria-label="Tu tarro tiene '+n+' cosas buenas"><span class="tapa"></span><div class="cristal">'+(bol||'<span class="vacio">Aquí caen tus cosas buenas</span>')+'</div></div>'; }
+function accionesReto(r, s){ var k=s.k, f=hoy(), h='';
+  if(r.ini>f || r.fin) return '';
+  if(k==='bolleria') h+=cta('HE EVITADO UN ANTOJO','rAntojo',r.id,'<span class="small">+1</span>','sm');
+  if(k==='compras') h+=cta('LO HE EVITADO','rCompra',r.id,ic('chev',18),'sm');
+  if(k==='agua') h+='<div class="grid2">'+cta('+1 VASO','rVaso',r.id,'<span class="small">'+s.agua+'/8</span>','sm')+cta('QUITAR','rVasoMenos',r.id,'','ghost sm')+'</div>';
+  if(k==='buenas'){ var b=buenasDia(r,f); h+=cta(b.length?'CAMBIAR LAS DE HOY':'MIS 3 DE HOY','rBuenas',r.id,'<span class="small">'+b.length+'/3</span>','sm'); }
+  if(s.reloj!=null) h+='<button type="button" class="link c" data-a="rRecaida" data-v="'+r.id+'">He recaído</button>';
+  return h; }
+function retoPanel(r){ var s=statsReto(r), k=s.k, dej=s.reloj!=null;
+  return '<section class="box col rp'+(dej?' dej':'')+'" aria-label="Tus estadísticas">'+
+    (r.ini>hoy() ? '<p class="p2">Empieza '+(r.ini===sumar(hoy(),1)?'mañana':fechaLarga(r.ini).toLowerCase())+'. Aquí verás tus cifras.</p>' : '')+
+    (dej?'<span class="lbl acc">Llevas '+e(sinTxt(k==='otra'?cfgR(r).nombre:({alcohol:'alcohol',tabaco:'fumar',bebidas:({energeticas:'energéticas',refrescos:'refrescos'})[cfgR(r).que]||'energéticas ni refrescos',porros:'porros',apuestas:'apostar',unas:'morderte las uñas',compras:'compras por impulso'})[k]))+'</span>':'')+
+    (k==='buenas'?tarroHTML(s):'')+
+    '<div class="col" style="gap:12px" data-rvivo="'+r.id+'">'+vivoHTML(r,s)+'</div>'+
+    hitoHTML(s)+eqHTML(s)+
+    (s.recuerdo?'<div class="rp-recuerdo"><span class="lbl">'+(entre(s.recuerdo.f,hoy())===1?'Ayer':'Hace '+entre(s.recuerdo.f,hoy())+' días')+' apuntaste</span><span>«'+e(s.recuerdo.x)+'»</span></div>':'')+
+    (s.lista&&s.lista.length?'<div class="col" style="gap:6px"><span class="lbl">Lo último que no compraste</span>'+s.lista.map(function(x){ return '<div class="row sb rp-li"><span>'+e(x.que||'Un capricho')+'</span><span class="num">'+eur0(+x.eur||0)+'</span></div>'; }).join('')+'</div>':'')+
+    (s.donde?'<details class="rp-donde"><summary>¿De dónde salen estas cifras?</summary><p>'+s.donde+'</p></details>':'')+
+    (s.sinCfg ? '<button type="button" class="box row sb rp-afinar" data-a="rCambiar" data-v="'+r.id+'"><span class="col" style="gap:2px"><strong>Responde 2 preguntas</strong><span>Así tus cifras son las tuyas, no una media.</span></span>'+ic('chev',16)+'</button>'
+      : (pregDe(k).length?'<div class="rp-calc"><span>Calculado con lo que me dijiste: <b>'+s.calc+'</b></span><button type="button" class="link" data-a="rCambiar" data-v="'+r.id+'">Cambiar</button></div>':''))+
+    accionesReto(r,s)+'</section>'; }
+function retoResumen(r){ if(r.ini>hoy()) return ''; var s=statsReto(r), t;
+  if(s.reloj!=null){ var x=relojTxt(s.reloj); t=x.d+' d '+pad(x.h)+' h '+pad(x.m)+' min'+(s.dinero!=null?' · '+eur(s.dinero):''); }
+  else if(s.big) t=s.big.l+': '+s.big.v; else return '';
+  return '<span class="rp-res" data-rres="'+r.id+'">'+t+'</span>'; }
+
+/* ---------- en vivo: reloj y dinero, cada segundo ---------- */
+setInterval(function(){
+  if(!D.perfil || document.hidden) return;
+  var els=app.querySelectorAll('[data-rvivo]'), i;
+  for(i=0;i<els.length;i++){ var r=D.retos.filter(function(x){ return x.id===els[i].dataset.rvivo; })[0]; if(!r) continue; var h=vivoHTML(r, statsReto(r)); if(els[i].dataset.ult!==h){ els[i].innerHTML=h; els[i].dataset.ult=h; } }
+  var rs=app.querySelectorAll('[data-rres]'); for(i=0;i<rs.length;i++){ var r2=D.retos.filter(function(x){ return x.id===rs[i].dataset.rres; })[0]; if(!r2) continue; var t=retoResumen(r2).replace(/<[^>]+>/g,''); if(rs[i].textContent!==t) rs[i].textContent=t; }
+}, 1000);
+setInterval(function(){ if(!D.perfil || document.hidden || U.cele || U.sheet || (typeof escribiendo==='function' && escribiendo())) return; logrosTodos(false); }, 20000);
+
+/* ---------- recaída: el reloj vuelve a cero, lo ganado se queda ---------- */
+function recaer(r, cuando){ var t=cuando||ahora(), ini=desdeReto(r); if(t<=ini) return;
+  r.deshacer={desde:r.desde, accMs:r.accMs||0, mejorMs:r.mejorMs||0, f:hoy()};
+  var ms=t-ini; r.accMs=(r.accMs||0)+ms; r.mejorMs=Math.max(r.mejorMs||0, ms); r.desde=t; }
+function deshacerRecaida(r){ if(!r.deshacer) return; r.desde=r.deshacer.desde; r.accMs=r.deshacer.accMs; r.mejorMs=r.deshacer.mejorMs; r.deshacer=null; }
+function trasMarcar(r, f, antes, ahoraV){ var R=retoDef(r.n)||{};
+  if(R.dejar && R.k!=='bolleria'){
+    if(ahoraV==='no' && antes!=='no'){ recaer(r, f===hoy() ? ahora() : inicioDia(sumar(f,1))); }
+    else if(antes==='no' && ahoraV!=='no' && r.deshacer){ deshacerRecaida(r); }
+  }
+}
+
+/* ---------- hojas propias ---------- */
+function retoSheetHTML(s){ var r=D.retos.filter(function(x){ return x.id===s.id; })[0]; if(!r) return ''; var k=kReto(r);
+  if(s.modo==='valor'){ var t, ops;
+    if(k==='redes'){ t='¿Cuántos minutos has estado sin redes ni móvil desde que te has levantado?'; ops=[30,45,60,90,120,180]; }
+    else if(k==='estudio'){ t='¿Cuántos minutos has estudiado'+(cfgR(r).que?' '+e(cfgR(r).que):'')+'?'; ops=[15,25,30,45,60,90,120,180]; }
+    else { t='¿Cuántas páginas has leído?'; ops=[10,15,20,30,50,100]; }
+    var b=ops.map(function(x){ return opt('<span class="num" style="font-size:22px">'+(k==='paginas'?x:hm(x).toUpperCase())+'</span>', valDia(r,s.f)===x,'rVal',r.id+'|'+s.f+'|'+x,'c'); }).join('');
+    return hoja('Reto · '+e(nombreReto(r).toLowerCase()), t, '<div class="grid3">'+b+'</div><p class="nota">Esto es lo que suma a tus estadísticas.</p>'); }
+  if(s.modo==='buenas'){ var cuerpo='';
+    for(var i=0;i<3;i++){ var tags=TAGS_BUENAS.map(function(x){ return '<button type="button" class="chip mini-chip'+(s['g'+i]===x[0]?' on':'')+'" data-a="rsTag" data-v="'+i+'.'+x[0]+'" aria-pressed="'+(s['g'+i]===x[0])+'"><i style="background:'+x[2]+'"></i>'+x[1]+'</button>'; }).join('');
+      cuerpo+='<div class="col" style="gap:8px"><input id="in-bn'+i+'" class="input" type="text" maxlength="90" placeholder="'+['Por ejemplo, comí con mi abuela','Por ejemplo, terminé el trabajo','Por ejemplo, el café de la mañana'][i]+'" value="'+e(s['c'+i]||'')+'" data-in="rs.c'+i+'"><div class="chips" style="gap:6px">'+tags+'</div></div>'; }
+    return hoja('3 cosas buenas', 'Hoy ha ido bien…', cuerpo+'<p class="nota">Se queda solo en tu móvil.</p>', cta('GUARDAR','rBuenasOk',r.id,ic('check'),'sm')); }
+  if(s.modo==='compra'){
+    return hoja('Sin compras por impulso','¿Qué era y cuánto costaba?', '<input id="in-cq" class="input" type="text" maxlength="50" placeholder="Por ejemplo, unas zapatillas" value="'+e(s.que||'')+'" data-in="rs.que"><div class="row" style="gap:8px"><input id="in-ce" class="input" type="text" inputmode="decimal" placeholder="Precio" value="'+e(s.eur||'')+'" data-in="rs.eur" style="flex:1"><span class="num" style="font-size:28px">€</span></div>', cta('GUARDAR','rCompraOk',r.id,ic('check'),'sm')); }
+  return ''; }
+
+/* ---------- en el cierre del día ---------- */
+function retoCierreExtra(r, f, c){ var k=kReto(r); if(!VALK[k] || (c.retos||{})[r.id]!=='si') return ''; var ops = k==='redes'?[30,45,60,90,120,180]:(k==='estudio'?[15,25,30,45,60,90,120]:[10,15,20,30,50]);
+  var cur=(c.rv&&c.rv[r.id]!=null)?c.rv[r.id]:valDia(r,f);
+  return '<div class="chips" style="gap:6px;margin-top:-4px"><span class="lbl" style="width:100%">'+(k==='redes'?'¿Cuántos minutos sin redes ni móvil desde que te levantaste?':(k==='estudio'?'¿Cuántos minutos?':'¿Cuántas páginas?'))+'</span>'+
+    ops.map(function(x){ return '<button type="button" class="chip'+(cur===x?' on':'')+'" data-a="ck:rv" data-v="'+r.id+'.'+x+'">'+(k==='paginas'?x:hm(x))+'</button>'; }).join('')+'</div>'; }
+function retoTrasDia(f, antes, c){ var d=dia(f,true);
+  if(c && c.rv){ d.rv=d.rv||{}; Object.keys(c.rv).forEach(function(id){ d.rv[id]=c.rv[id]; }); }
+  D.retos.forEach(function(r){ if(r.fin || r.ini>f) return; trasMarcar(r, f, (antes||{})[r.id], (d.retos||{})[r.id]); }); }
+
+/* ---------- acciones ---------- */
+function retoPorId(id){ return D.retos.filter(function(x){ return x.id===id; })[0]; }
+function retoAccion(a, v){ var f=hoy(), r, s=U.sheet;
+  switch(a){
+    case 'nuevoReto': var R0=RETOS[+v]; U.rqK=R0&&R0.k; U.rq=cfgDefecto(U.rqK); return false;
+    case 'rq': var p=String(v).split('|'), val=JSON.parse(p.slice(1).join('|')); U.rq[p[0]]=val;
+      if(U.rqK==='tabaco' && p[0]==='tipo'){ if(val==='vaper'){ U.rq.n=3; U.rq.precio=3; } else { U.rq.n=10; U.rq.precio=5.5; } }
+      render(); return true;
+    case 'rqDia': var di=+v, ds=U.rq.dias=U.rq.dias||[], ix=ds.indexOf(di); if(ix===-1) ds.push(di); else ds.splice(ix,1); ds.sort(); render(); return true;
+    case 'empezarReto': if(!retoCfgOk()){ toast(U.rqK==='otra'?'Ponle nombre a tu reto.':(U.rqK==='estudio'?'Dime qué quieres estudiar y qué días.':'Revisa las respuestas.')); return true; }
+      var n0=D.retos.length, cfg=U.rq, kk=U.rqK;
+      setTimeout(function(){ var nr=D.retos[D.retos.length-1]; if(!nr || D.retos.length===n0) return;
+        if(pregDe(kk).length) nr.cfg=cfg; nr.desde = nr.ini===hoy() ? ahora() : inicioDia(nr.ini); nr.ev=[]; nr.vistos={}; nr.vistosOk=1;
+        if(kk==='estudio' && cfg.dias && cfg.dias.length){ var toca=0; for(var x=nr.ini; x<=finReto(nr); x=sumar(x,1)) if(cfg.dias.indexOf(dowIdx(x))!==-1) toca++; nr.vale=Math.max(1, Math.ceil(toca*0.8)); }
+        guardar(); render(); }, 0);
+      return false;
+    case 'rCambiar': r=retoPorId(v); if(!r) return true; U.retoSel=v; U.rqK=kReto(r); U.rq=JSON.parse(JSON.stringify(r.cfg||cfgDefecto(U.rqK))); go('retoCfg'); return true;
+    case 'retoCfgOk': r=retoPorId(U.retoSel); if(!r) return true; if(!retoCfgOk()){ toast('Revisa las respuestas.'); return true; } r.cfg=U.rq; guardar(); back(); toast('Listo. Cifras recalculadas.'); return true;
+    case 'retoRapido': case 'retoHoy':
+      var id = a==='retoHoy' ? U.retoSel : String(v).split('.')[0], rr=retoPorId(id); if(!rr) return false;
+      var antes=((D.dias[f]||{}).retos||{})[id];
+      setTimeout(function(){ var ahoraV=((D.dias[f]||{}).retos||{})[id]; trasMarcar(rr, f, antes, ahoraV);
+        if(ahoraV==='si' && antes!=='si' && VALK[kReto(rr)]){ U.sheet={tipo:'reto', modo:'valor', id:id, f:f, anim:true}; }
+        logrosReto(rr); guardar(); render(); }, 0);
+      return false;
+    case 'rVal': var pv=String(v).split('|'); r=retoPorId(pv[0]); if(!r) return true; var dd=dia(pv[1],true); dd.rv=dd.rv||{}; dd.rv[r.id]=+pv[2]; U.sheet=null; guardar(); logrosReto(r); render();
+      toast(kReto(r)==='paginas' ? '+'+pv[2]+' páginas.' : '+'+hm(+pv[2])+(kReto(r)==='redes'?' de vida ganados.':' de estudio.')); vibrar(15); return true;
+    case 'ck:rv': var pc=String(v).split('.'); U.ck.rv=U.ck.rv||{}; U.ck.rv[pc[0]]=+pc[1]; render(); return true;
+    case 'rAntojo': r=retoPorId(v); if(!r) return true; (r.ev=r.ev||[]).push({k:'antojo', t:ahora(), f:f}); guardar();
+      var kc=cfgR(r).tipo==='frito'?300:(cfgR(r).tipo==='dulce'?350:325); celebrar({tipo:'mini'}); render(); toast('Antojo evitado: unas '+kc+' kcal menos.'); logrosReto(r); return true;
+    case 'rVaso': r=retoPorId(v); if(!r) return true; (r.ev=r.ev||[]).push({k:'vaso', t:ahora(), f:f}); var nv=vasosDia(r,f); guardar(); vibrar(12);
+      if(nv===8){ celebrar({tipo:'mini'}); toast('¡2 litros hoy! Día cumplido.'); } else toast('Vaso '+nv+' de 8.'); logrosReto(r); render(); return true;
+    case 'rVasoMenos': r=retoPorId(v); if(!r) return true; var evs=r.ev||[]; for(var j=evs.length-1;j>=0;j--){ if(evs[j].k==='vaso' && evs[j].f===f){ evs.splice(j,1); break; } } guardar(); render(); return true;
+    case 'rBuenas': r=retoPorId(v); if(!r) return true; var b=buenasDia(r,f), sh={tipo:'reto', modo:'buenas', id:r.id, anim:true}; b.forEach(function(x,i){ sh['c'+i]=x.x; sh['g'+i]=x.tag; }); U.sheet=sh; render(); return true;
+    case 'rsTag': if(!s) return true; var pt=String(v).split('.'); s['g'+pt[0]] = s['g'+pt[0]]===pt[1] ? null : pt[1]; s.anim=false; render(); return true;
+    case 'rBuenasOk': r=retoPorId(v); if(!r || !s) return true; var cs=[]; for(var q=0;q<3;q++){ var tx=String(s['c'+q]||'').trim(); if(tx) cs.push({x:tx, tag:s['g'+q]||null}); }
+      if(!cs.length){ toast('Escribe al menos una.'); return true; }
+      r.ev=(r.ev||[]).filter(function(x){ return !(x.k==='buenas' && x.f===f); }); var antesN=0; r.ev.forEach(function(x){ if(x.k==='buenas') antesN+=x.c.length; });
+      r.ev.push({k:'buenas', t:ahora(), f:f, c:cs}); U.tarroNuevo=cs.length; U.sheet=null; guardar(); render(); vibrar([15,40,15]);
+      toast(cs.length===3?'Tres más a tu tarro.':'Guardadas. Con 3, el día cuenta.'); logrosReto(r); return true;
+    case 'rCompra': r=retoPorId(v); if(!r) return true; U.sheet={tipo:'reto', modo:'compra', id:r.id, anim:true}; render(); return true;
+    case 'rCompraOk': r=retoPorId(v); if(!r || !s) return true; var pe=parseFloat(String(s.eur||'').replace(',','.')); if(!(pe>0)){ toast('Pon cuánto costaba.'); return true; }
+      var antesE=0; evDe(r,'compra').forEach(function(x){ antesE+=+x.eur||0; });
+      (r.ev=r.ev||[]).push({k:'compra', t:ahora(), f:f, que:String(s.que||'').trim()||'Un capricho', eur:pe}); U.sheet=null; guardar(); render();
+      var tot=antesE+pe, eqn=null; EQ_EUR.forEach(function(q){ if(antesE<q[0] && tot>=q[0]) eqn=q; });
+      if(!eqn) toast('Te has ahorrado '+eur0(pe)+'. Llevas '+eur0(tot)+'.'); logrosReto(r); vibrar([15,40,15]); return true;
+    case 'rRecaida': U.sheet={tipo:'confirmar', anim:true, lbl:'Reto', t:'¿Has recaído?', p:'Sin culpa. El reloj vuelve a cero, pero tu mejor marca y todo lo que has ganado se quedan.', si:'SÍ, HE RECAÍDO', a:'rRecaidaSi', v:v}; render(); return true;
+    case 'rRecaidaSi': r=retoPorId(v); if(!r) return true; recaer(r); r.deshacer=null; U.sheet=null; guardar(); render(); toast('Apuntado. Lo ganado se queda. El reloj empieza otra vez.'); return true;
+  }
+  return false; }
+
+/* =========================================================
    Parte 4: hojas, guía, render, acciones y arranque
    ========================================================= */
 function hoja(lbl, titulo, cuerpo, botones, cerrar){ return '<div class="overlay guia-ov" role="dialog" aria-modal="true" aria-label="'+e(titulo.replace(/<[^>]+>/g,''))+'" data-a="'+(cerrar===false?'':'cerrarSheet')+'" data-fondo="1"><div class="sheet'+(U.sheet&&U.sheet.anim!==false?' anim':'')+'">'+
@@ -1437,6 +1862,7 @@ function sheetHTML(){ var s=U.sheet; if(!s) return ''; var h='';
         (dd.resto>0?'<p class="nota">Sobran '+kg(dd.resto)+' kg por lado: no hay discos tan pequeños.</p>':'<p class="nota">Pon esto en cada lado de la barra.</p>')); break;
     case 'num': var esM=s.k==='movil', mt=metaDe(s.k,hoy()), okn = esM ? s.val<=mt : s.val>=mt;
       h=hoja(esM?'Móvil':'Sueño', esM?'¿Cuánto móvil llevas hoy?':'¿Cuánto dormiste anoche?', '<p class="p2">'+(esM?'Míralo en Ajustes del iPhone → Tiempo de uso. Meta: menos de '+hm(mt)+'.':'Desde que te dormiste hasta que te levantaste. Meta: '+hm(mt)+' o más.')+'</p><div class="box row sb" style="padding:8px"><button type="button" class="paso" data-a="numPaso" data-v="-15" aria-label="15 minutos menos">−</button><span class="col" style="align-items:center;gap:2px"><span class="num'+(okn?' acc':'')+'" id="num-val" style="font-size:44px">'+hm(s.val).toUpperCase()+'</span><span style="font-size:13px;color:var(--text3)" id="num-est">'+(okn?'Dentro de tu meta':(esM?'Por encima de tu meta':'Por debajo de tu meta'))+'</span></span><button type="button" class="paso" data-a="numPaso" data-v="15" aria-label="15 minutos más">+</button></div>', cta('GUARDAR','guardarNum','',ic('check'))); break;
+    case 'reto': h=retoSheetHTML(s); break;
     case 'confirmar': h=hoja(s.lbl, s.t, '<p class="p2">'+s.p+'</p>', '<div class="grid2">'+cta('NO','cerrarSheet','','','ghost sm')+cta(s.si,s.a,s.v,ic('check'),'sm')+'</div>'); break;
   }
   s.anim=false; return h; }
@@ -1513,6 +1939,7 @@ function empezarApp(){ var t=U.t;
   D=nuevoD(); D.perfil=perfilDeTest(t); ponerAlDia(); D.medallas={}; D.nivel=1;
   mensajeDeHoy(); D.ultimaVisita=hoy(); fijarAreasHoy(); guardar(); U.t={}; U.hist=[]; U.pantalla='hoy'; render(); if(NUBE.db) { NUBE.ok=true; nubeSubir(true); } }
 function act(a,v,el){
+  if(retoAccion(a,v)) return;
   if(D.perfil && (a==='marcar'||a==='guardarPasos'||a==='entrenoFuera'||a==='guardarNum')) U.m0=marcadorHoy(); else U.m0=null;
   if(a.indexOf('t:')===0) return accTest(a.slice(2),v);
   if(a.indexOf('ck:')===0) return accCierre(a.slice(3),v);
@@ -1691,6 +2118,8 @@ app.addEventListener('input', function(ev){ var t=ev.target, k=t.dataset && t.da
   else if(k==='t.euros'){ U.t.dejar=U.t.dejar||{}; U.t.dejar.euros=v; }
   else if(k==='t.edad'){ U.t.edad=v.replace(/\D/g,''); var b2=app.querySelector('#scr .cta'); if(b2) b2.classList.toggle('off', !!faltaTest()); var av=document.getElementById('edad-aviso'), ne=parseInt(U.t.edad,10); if(av) av.hidden = !(ne<16); }
   else if(k==='ck.pasos'){ U.ck.pasos=v; }
+  else if(k.indexOf('rq.')===0 && U.rq){ U.rq[k.slice(3)]=v; var bq=app.querySelector('#scr .cta'); if(bq) bq.classList.toggle('off', !retoCfgOk()); }
+  else if(k.indexOf('rs.')===0 && U.sheet){ U.sheet[k.slice(3)]=v; }
   else if(k==='ck.nota'){ U.ck.nota=v; }
   else if(k==='p.nombre'){ if(v.trim()){ D.perfil.nombre=v.trim(); guardarPronto(); } }
   else if(k==='p.euros'){ var n=parseFloat(v.replace(',','.')); D.perfil.dejar=D.perfil.dejar||{que:'otra'}; D.perfil.dejar.euros=isNaN(n)?0:n; guardarPronto(); }
