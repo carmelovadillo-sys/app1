@@ -595,10 +595,10 @@ input[type=file]{font-size:0}
 .app::before{content:"";position:absolute;inset:-25%;z-index:0;pointer-events:none;
   transition:background 1.6s linear;
   background:
-    radial-gradient(34% 30% at 17% 27%, color-mix(in srgb,var(--acc) 70%,transparent), transparent 72%),
-    radial-gradient(32% 32% at 13% 50%, color-mix(in srgb,var(--au2) var(--auF),transparent), transparent 72%),
-    radial-gradient(34% 30% at 18% 73%, color-mix(in srgb,var(--au3) var(--auG),transparent), transparent 72%),
-    radial-gradient(24% 22% at 22% 88%, color-mix(in srgb,var(--acc) 30%,transparent), transparent 72%);
+    radial-gradient(40% 26% at 19% 22%, color-mix(in srgb,var(--acc) 78%,transparent), transparent 74%),
+    radial-gradient(44% 30% at 14% 38%, color-mix(in srgb,var(--au2) var(--auF),transparent), transparent 76%),
+    radial-gradient(42% 30% at 19% 56%, color-mix(in srgb,var(--au3) var(--auG),transparent), transparent 76%),
+    radial-gradient(30% 24% at 24% 72%, color-mix(in srgb,var(--au2) 40%,transparent), transparent 74%);
   filter:blur(34px);animation:aurora 26s ease-in-out infinite alternate;will-change:transform}
 .app[data-tema="claro"]::before{opacity:.62}
 @media (prefers-color-scheme: light){ .app[data-tema="auto"]::before{opacity:.62} }
@@ -610,8 +610,8 @@ input[type=file]{font-size:0}
 @media (prefers-reduced-motion: reduce){ .endirecto::before{animation:none;opacity:.3} }
 @keyframes aurora{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(1.5%,-3%,0) scale(1.05)}100%{transform:translate3d(.5%,3%,0) scale(1.02)}}
 .app .screen{position:relative;z-index:1;background:transparent}
-.box{background:color-mix(in srgb,var(--caja) 52%,transparent);-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%);box-shadow:inset 0 1px 0 var(--brillo),0 6px 22px rgba(0,0,0,.10)}
-.app[data-tema="claro"] .box{background:color-mix(in srgb,var(--caja) 64%,transparent)}
+.box{background:color-mix(in srgb,var(--caja) 38%,transparent);-webkit-backdrop-filter:blur(24px) saturate(165%);backdrop-filter:blur(24px) saturate(165%);box-shadow:inset 0 1px 0 var(--brillo),0 6px 22px rgba(0,0,0,.10)}
+.app[data-tema="claro"] .box{background:color-mix(in srgb,var(--caja) 58%,transparent)}
 .fila{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 .h1.frase{font-size:38px;line-height:1.02;text-transform:none;letter-spacing:.002em;text-wrap:balance}
 @media (max-width:360px){ .h1.frase{font-size:34px} }
@@ -790,7 +790,7 @@ input,textarea,select{font-size:16px}
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=b1652529"></script><script src="banco.js?v=b1652529"></script><script src="app.js?v=b1652529"></script>
+<script src="datos.js?v=55858725"></script><script src="banco.js?v=55858725"></script><script src="app.js?v=55858725"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');
