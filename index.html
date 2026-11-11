@@ -586,18 +586,22 @@ input[type=file]{font-size:0}
 .app{isolation:isolate;overflow:clip}
 /* el aura entra por la izquierda y cambia de color con la hora del día */
 .app{--au2:#5B8CFF;--au3:#B45BFF;--auF:38%;--auG:30%}
-.app[data-franja="manana"]{--au2:#FFA42B;--au3:#EC407A;--auF:44%;--auG:30%}
-.app[data-franja="mediodia"]{--au2:#FFC857;--au3:#4FD1A5;--auF:38%;--auG:26%}
-.app[data-franja="tarde"]{--au2:#6D5CFF;--au3:#29B6F6;--auF:46%;--auG:34%}
-.app[data-franja="noche"]{--au2:#3E4AA8;--au3:#1A7C7A;--auF:34%;--auG:24%}
+.app[data-franja="manana"]{--au2:#FFA42B;--au3:#EC407A;--auF:72%;--auG:56%}
+.app[data-franja="mediodia"]{--au2:#FFC857;--au3:#4FD1A5;--auF:66%;--auG:50%}
+.app[data-franja="tarde"]{--au2:#6D5CFF;--au3:#29B6F6;--auF:76%;--auG:60%}
+.app[data-franja="noche"]{--au2:#3E4AA8;--au3:#1A7C7A;--auF:64%;--auG:46%}
+/* OJO: el pseudo mide 150% de la pantalla (inset -25%), así que un 17% suyo
+   es el borde izquierdo de verdad. Con valores más bajos el aura se quedaba fuera. */
 .app::before{content:"";position:absolute;inset:-25%;z-index:0;pointer-events:none;
   transition:background 1.6s linear;
   background:
-    radial-gradient(28% 26% at 4% 14%, color-mix(in srgb,var(--acc) 42%,transparent), transparent 70%),
-    radial-gradient(26% 28% at 0% 46%, color-mix(in srgb,var(--au2) var(--auF),transparent), transparent 70%),
-    radial-gradient(28% 28% at 4% 80%, color-mix(in srgb,var(--au3) var(--auG),transparent), transparent 70%),
-    radial-gradient(20% 20% at 10% 98%, color-mix(in srgb,var(--acc) 14%,transparent), transparent 70%);
-  filter:blur(30px);animation:aurora 26s ease-in-out infinite alternate;will-change:transform}
+    radial-gradient(34% 30% at 17% 27%, color-mix(in srgb,var(--acc) 70%,transparent), transparent 72%),
+    radial-gradient(32% 32% at 13% 50%, color-mix(in srgb,var(--au2) var(--auF),transparent), transparent 72%),
+    radial-gradient(34% 30% at 18% 73%, color-mix(in srgb,var(--au3) var(--auG),transparent), transparent 72%),
+    radial-gradient(24% 22% at 22% 88%, color-mix(in srgb,var(--acc) 30%,transparent), transparent 72%);
+  filter:blur(34px);animation:aurora 26s ease-in-out infinite alternate;will-change:transform}
+.app[data-tema="claro"]::before{opacity:.62}
+@media (prefers-color-scheme: light){ .app[data-tema="auto"]::before{opacity:.62} }
 /* punto "en directo" de Hoy */
 .endirecto{position:relative;width:8px;height:8px;flex:0 0 auto;display:inline-block}
 .endirecto::before,.endirecto::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--acc)}
@@ -786,7 +790,7 @@ input,textarea,select{font-size:16px}
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=f855b081"></script><script src="banco.js?v=f855b081"></script><script src="app.js?v=f855b081"></script>
+<script src="datos.js?v=b1652529"></script><script src="banco.js?v=b1652529"></script><script src="app.js?v=b1652529"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');
