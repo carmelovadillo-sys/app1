@@ -565,7 +565,7 @@ V.hoy = function(){ var f=hoy(), p=D.perfil, d=D.dias[f]||{h:{}}, ts=tareas(f), 
   var nv=nivelDe(c);
   var instalar = (!esInstalada() && !D.vistos.instalar && diaN(f)>=1 && (APP_URL || !EN_CLAUDE)) ? '<div class="box col" style="padding:12px 14px;gap:8px"><div class="row sb"><strong style="font-size:15px">Tenla como una app</strong><button type="button" class="link" style="min-height:32px;padding:0" data-a="cerrarInstalar">Cerrar</button></div><span style="font-size:13px;color:var(--text2)">Con su icono, a pantalla completa y sin internet en el gym.</span><button type="button" class="chip" style="border:var(--lleno)" data-a="instalarSheet">Cómo instalarla</button></div>' : '';
   return sinTest+instalar+(sinGuardar?'<div class="box pad" style="border:2px solid #D93A40"><strong>Este navegador no deja guardar.</strong><p class="p2" style="font-size:14px">Puede que estés en una ventana privada. Ábrela en una normal o tus datos se perderán al cerrarla.</p></div>':'')+'<div class="row sb"><span class="lbl">'+fechaLarga(f)+' · día '+diaN(f)+'</span><span class="row" style="gap:8px"><button type="button" class="nivel-chip" data-a="go" data-v="medallas" aria-label="Nivel '+nv.i+': '+nv.n+'. Ver medallas">'+ic('retos',14,2.4)+'<span>'+nv.n+'</span></button><button type="button" class="ayuda" data-a="guia" aria-label="Cómo funciona">?</button><button type="button" class="avatar" data-a="go" data-v="ajustes" aria-label="Tu perfil y ajustes">'+avatarIn()+'</button></span></div>'+
-  '<h1 class="h1 frase" style="margin-top:2px">'+e(msgDelDia())+'</h1>'+
+  '<h1 class="h1 frase" style="margin-top:2px">'+e(titularHoy(f,{cerrado:!!d.cerrado, dificil:!!d.dificil, total:ts.length, hechas:n, falta:falta, todo:todo, dias:c}))+'</h1>'+
   '<span class="estado"><b>'+e(estado)+'</b>'+(dr?' '+e(dr):'')+'</span>'+
   wrapCard(f)+compromisoCard(f)+
   pitidoCard()+
@@ -2104,6 +2104,22 @@ var TEST = ['bienvenida','plan'].concat(Object.keys(PREG));
 var TAB_DE = {hoy:'hoy',partido:'hoy',cierre:'hoy',ajustes:'hoy',atajoPasos:'progreso',pasosHist:'progreso',ajChungo:'hoy',ajCuerpo:'hoy',ajAreas:'hoy',ajGym:'hoy',ajPasos:'hoy',ajMovil:'hoy',ajDejar:'hoy',ajNombre:'hoy',ajTono:'hoy',ajAspecto:'hoy',privacidad:'hoy',
   gym:'gym',entreno:'gym',ejercicios:'gym',ejercicio:'gym',resumen:'gym',story:'gym',historial:'gym',records:'gym',rutinaEd:'gym',
   progreso:'progreso',medallas:'progreso',razones:'hoy',wrap:'hoy',retos:'retos',reto:'retos',nuevoReto:'retos', mister:'mister'};
+/* Titular de Hoy: corto, motivador y según en qué punto del día estás */
+function titularHoy(f, st){
+  var p=D.perfil||{}, cat;
+  if(st.cerrado) cat='cerrado';
+  else if(st.dificil) cat='dificil';
+  else if(!st.total) cat='descanso';
+  else if(st.todo) cat=(st.dias>=5 && diaN(f)%2===0) ? 'racha' : 'todo';
+  else if(st.hechas===0) cat=(dsem(f)===0 ? 'lunes' : (dsem(f)>=5 ? 'finde' : 'empezar'));
+  else if(st.falta===1) cat='falta1';
+  else cat='faltan';
+  var L=(typeof TITU!=='undefined' && TITU[cat]) ? TITU[cat] : null;
+  if(!L || !L.length) return st.todo ? 'Todo hecho.' : 'A por hoy.';
+  var t=L[(diaN(f)*3 + cat.length) % L.length];
+  return t.replace('{x}', String(st.falta)).replace('{d}', String(st.dias))
+          .replace(/,? ?\[nombre\]/, p.nombre ? ', '+p.nombre : '');
+}
 /* franja del día: el aura del fondo cambia de color con la hora */
 function franja(){ var h=new Date(ahora()).getHours();
   return h<11 ? 'manana' : (h<17 ? 'mediodia' : (h<22 ? 'tarde' : 'noche')); }

@@ -609,7 +609,8 @@ input[type=file]{font-size:0}
 .box{background:color-mix(in srgb,var(--caja) 52%,transparent);-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%);box-shadow:inset 0 1px 0 var(--brillo),0 6px 22px rgba(0,0,0,.10)}
 .app[data-tema="claro"] .box{background:color-mix(in srgb,var(--caja) 64%,transparent)}
 .fila{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-.h1.frase{font-size:30px;line-height:1.08;text-transform:none;letter-spacing:0;text-wrap:balance}
+.h1.frase{font-size:38px;line-height:1.02;text-transform:none;letter-spacing:.002em;text-wrap:balance}
+@media (max-width:360px){ .h1.frase{font-size:34px} }
 .estado{display:block;margin-top:8px;font-size:14px;color:var(--text2);line-height:1.45}
 .estado b{color:var(--text);font-weight:600}
 /* barra de abajo: borde de luz arriba-izquierda */
@@ -785,7 +786,7 @@ input,textarea,select{font-size:16px}
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=785d3ebd"></script><script src="banco.js?v=785d3ebd"></script><script src="app.js?v=785d3ebd"></script>
+<script src="datos.js?v=102d0aa3"></script><script src="banco.js?v=102d0aa3"></script><script src="app.js?v=102d0aa3"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');
