@@ -1,6 +1,6 @@
 /* App 1% · funciona sin internet: lo guardado primero y, por detrás, se actualiza */
-var CACHE='app1-089e808a';
-var ARCHIVOS=["./", "index.html", "manifest.webmanifest", "datos.js?v=089e808a", "banco.js?v=089e808a", "app.js?v=089e808a", "fuentes/fuentes.css", "fuentes/anton-latin.woff2", "fuentes/anton-latin-ext.woff2", "fuentes/inter-latin.woff2", "fuentes/inter-latin-ext.woff2", "iconos/icon-180.png", "iconos/icon-192.png", "iconos/icon-512.png"];
+var CACHE='app1-f855b081';
+var ARCHIVOS=["./", "index.html", "manifest.webmanifest", "datos.js?v=f855b081", "banco.js?v=f855b081", "app.js?v=f855b081", "fuentes/fuentes.css", "fuentes/anton-latin.woff2", "fuentes/anton-latin-ext.woff2", "fuentes/inter-latin.woff2", "fuentes/inter-latin-ext.woff2", "iconos/icon-180.png", "iconos/icon-192.png", "iconos/icon-512.png"];
 self.addEventListener('install',function(e){ e.waitUntil(caches.open(CACHE).then(function(c){ return c.addAll(ARCHIVOS); }).then(function(){ return self.skipWaiting(); })); });
 self.addEventListener('activate',function(e){ e.waitUntil(caches.keys().then(function(ks){ return Promise.all(ks.filter(function(k){ return k!==CACHE; }).map(function(k){ return caches.delete(k); })); }).then(function(){ return self.clients.claim(); })); });
 self.addEventListener('fetch',function(e){ var r=e.request; if(r.method!=='GET' || new URL(r.url).origin!==location.origin) return;
