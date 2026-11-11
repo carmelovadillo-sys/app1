@@ -382,7 +382,7 @@ function faltaTest(){ var t=U.t, k=U.pantalla, q=PREG[k];
   if(k==='nombre') return (t.nombre||'').trim()?'':'Escribe tu nombre o un apodo.';
   if(k==='edad'){ var n=parseInt(t.edad,10); if(!t.edad || isNaN(n)) return 'Escribe tu edad.'; if(n<16) return 'Con menos de 16 años todavía no puedes usar la app.'; if(n>99) return 'Revisa la edad.'; return cuerpoMal(t.peso, t.altura); }
   if(k==='chungo'){ if(!t.chungo) return 'Elige tu mínimo para un día chungo.'; if(t.chungo==='propio' && !String(t.chungoTxt||'').trim()) return 'Escribe tu mínimo.'; return ''; }
-  if(k==='retoTest') return t.reto!=null?'':'Elige un reto o «Ahora no».';
+  if(k==='retoTest') return (retosTest(t).length || t.reto==='no') ? '' : 'Elige uno o varios retos, o «Ahora no».';
   if(k==='mejorar') return (t.areas&&t.areas.length)?'':'Elige al menos una.';
   if(k==='diasGym') return (t.diasGym&&t.diasGym.length)?'':'Elige al menos un día.';
   if(k==='dejar'){ if(!t.dejar||!t.dejar.que) return 'Elige una opción.'; if(t.areas.indexOf('dejar')!==-1 && t.dejar.que==='nada') return 'Has elegido dejar algo: dime qué.'; return ''; }
@@ -456,14 +456,16 @@ var CHUNGO = [['paseo10','Paseo de 10 minutos'],['paseo20','Paseo de 20 minutos'
 function chungoOpciones(sel, txt, a, pre){ var h=''; CHUNGO.forEach(function(c){ h+=opt('<span class="dot" aria-hidden="true"></span><span>'+c[1]+'</span>', sel===c[0], a, c[0], 'calm'); });
   return '<div class="col" style="gap:8px">'+h+'</div>'+(sel==='propio'?'<div class="sec"><label class="lbl" for="in-chungo">Tu mínimo</label><input id="in-chungo" class="input" type="text" maxlength="40" placeholder="Por ejemplo, 15 minutos de bici" value="'+e(txt||'')+'" data-in="'+pre+'.chungoTxt"></div>':''); }
 V.chungo = function(){ return testTop()+'<h1 class="h1 q" style="font-size:40px">Un día chungo, ¿qué mínimo te vale?</h1><p class="p2">Los días malos, tu 1% pasa a ser solo esto. Lo justo para no soltarlo del todo.</p>'+chungoOpciones(U.t.chungo, U.t.chungoTxt, 't:chungo', 't')+'<div class="fill"></div>'+testSig(); };
-V.retoTest = function(){ var t=U.t, p=perfilDeTest(t), pt=retosParaTi(p, 3), h='', todos='';
-  pt.forEach(function(i){ var R=RETOS[i]; h+=opt('<span class="col" style="gap:3px;text-align:left"><span class="lbl" style="color:inherit;opacity:.75">'+R.tema+'</span><strong style="font-size:16px">'+R.n+'</strong><span style="font-size:13px;opacity:.8">'+R.total+' días · te valen '+R.vale+'</span></span>', t.reto===String(i), 't:reto', String(i), 'calm'); });
-  if(U.tRetosTodos) RETOS.forEach(function(R,i){ if(pt.indexOf(i)!==-1 || R.k==='otra') return; todos+='<button type="button" class="chip'+(t.reto===String(i)?' on':'')+'" aria-pressed="'+(t.reto===String(i))+'" data-a="t:reto" data-v="'+i+'">'+R.n+'</button>'; });
-  return testTop()+'<h1 class="h1 q">¿Empiezas con un reto?</h1><p class="p2">Opcional. Cortos, con principio y fin, y con margen: un mal día no lo rompe.</p>'+
+V.retoTest = function(){ var t=U.t, p=perfilDeTest(t), pt=retosParaTi(p, 3), h='', todos='', el=retosTest(t);
+  var puesto=function(i){ return el.indexOf(i)!==-1; };
+  pt.forEach(function(i){ var R=RETOS[i]; h+=opt('<span class="col" style="gap:3px;text-align:left"><span class="lbl" style="color:inherit;opacity:.75">'+R.tema+'</span><strong style="font-size:16px">'+R.n+'</strong><span style="font-size:13px;opacity:.8">'+R.total+' días · te valen '+R.vale+'</span></span>', puesto(i), 't:reto', String(i), 'calm'); });
+  if(U.tRetosTodos) RETOS.forEach(function(R,i){ if(pt.indexOf(i)!==-1 || R.k==='otra') return; todos+='<button type="button" class="chip'+(puesto(i)?' on':'')+'" aria-pressed="'+puesto(i)+'" data-a="t:reto" data-v="'+i+'">'+R.n+'</button>'; });
+  return testTop()+'<h1 class="h1 q">¿Empiezas con algún reto?</h1><p class="p2">Opcional, y puedes elegir más de uno. Cortos, con principio y fin, y con margen: un mal día no lo rompe.</p>'+
   (h?'<span class="lbl">Para ti</span><div class="col" style="gap:8px">'+h+'</div>':'')+
   (U.tRetosTodos?'<span class="lbl">Todos</span><div class="chips">'+todos+'</div>':'<button type="button" class="link" style="align-self:flex-start" data-a="tRetosTodos">Ver todos los retos</button>')+
-  opt('<span class="dot" aria-hidden="true"></span><span>Ahora no</span>', t.reto==='no', 't:reto', 'no', 'calm')+
-  (t.reto && t.reto!=='no' && RETOS[+t.reto] && RETOS[+t.reto].dejar ? '<p class="nota">Al empezar te pregunto un par de cosas para tus cifras.</p>' : '')+
+  opt('<span class="dot" aria-hidden="true"></span><span>Ahora no</span>', t.reto==='no' && !el.length, 't:reto', 'no', 'calm')+
+  (el.length>=3 ? '<p class="nota">Tres retos a la vez son muchos para empezar. Con uno o dos suele ir mejor, y siempre puedes añadir otro cuando lleves unos días. Tú decides.</p>'
+   : (el.some(function(i){ return RETOS[i] && RETOS[i].dejar; }) ? '<p class="nota">Al empezar te pregunto un par de cosas para tus cifras.</p>' : ''))+
   '<div class="fill"></div>'+testSig(); };
 var TONOS = [['suave','SUAVE','','«Hoy no ha salido. ¿Lo dejamos para mañana?»'],['directo','DIRECTO','',"«Al final no lo hiciste. ¿Mañana a la misma hora?»"],['exigente','EXIGENTE','','«Quedamos en hacerlo y no lo hiciste. Mañana, sin excusas.»'],['auto','QUE CAMBIE SEGÚN ESTÉ','','Exigente en tus días buenos y suave en los malos.']];
 var TONO_N = {suave:'Suave',directo:'Directo',exigente:'Exigente',auto:'Según cómo esté'};
@@ -507,7 +509,9 @@ function adaptaciones(p){ var r=[];
   if(p.abandono==='tiempo') r.push('Los días justos, con lo mínimo vale.');
   if(p.abandono==='aburro') r.push('Te propongo retos cortos para cambiar de aire.');
   r.push('Un día chungo, tu 1% es solo esto: '+chungoTxt(p).toLowerCase()+'.');
-  if(U.t && U.t.reto && U.t.reto!=='no' && RETOS[+U.t.reto]){ var Rt=RETOS[+U.t.reto]; r.push('Reto desde hoy: '+Rt.n.toLowerCase()+'. '+Rt.total+' días; te valen '+Rt.vale+'.'); }
+  var rl=retosTest(U.t);
+  if(rl.length===1){ var Rt=RETOS[rl[0]]; r.push('Reto desde hoy: '+Rt.n.toLowerCase()+'. '+Rt.total+' días; te valen '+Rt.vale+'.'); }
+  else if(rl.length>1) r.push('Retos desde hoy: '+rl.map(function(i){ return RETOS[i].n.toLowerCase(); }).join(' · ')+'.');
   r.push('Tu primer partido es contra tu yo de antes: lo que me has contado hoy.');
   r.push('Míster te habla en tono '+TONO_N[p.tono].toLowerCase()+' y celebra '+{tope:'a tope',normal:'lo importante',tranqui:'sin ruido'}[p.celebra]+'.');
   return r; }
@@ -2176,8 +2180,13 @@ function empezarApp(){ var t=U.t;
     D.perfil=np; retoDelTest(t); ponerAlDia(); fijarAreasHoy(); decir('Hecho: app ajustada a lo que me has contado. Seguimos donde lo dejaste.', hoy()); guardar(); U.t={}; U.hist=[]; U.pantalla='hoy'; render(); celebrar({tipo:'mini'}); toast('Plan actualizado. No has perdido nada.'); return; }
   D=nuevoD(); D.perfil=perfilDeTest(t); retoDelTest(t); ponerAlDia(); D.medallas={}; D.nivel=1;
   mensajeDeHoy(); D.ultimaVisita=hoy(); fijarAreasHoy(); guardar(); U.t={}; U.hist=[]; U.pantalla='hoy'; render(); if(NUBE.db) { NUBE.ok=true; nubeSubir(true); } }
-function retoDelTest(t){ if(!t.reto || t.reto==='no') return; var R=RETOS[+t.reto]; if(!R || D.retos.some(function(x){ return !x.fin && x.n===R.n; })) return;
-  D.retos.push({id:uid(), n:R.n, total:R.total, vale:R.vale, ini:hoy(), fin:null, desde:ahora(), ev:[], vistos:{}, vistosOk:1}); }
+/* los retos elegidos en el test: varios a la vez */
+function retosTest(t){ if(!t) return [];
+  if(t.retos && t.retos.length) return t.retos.slice();
+  return (t.reto!=null && t.reto!=='no' && RETOS[+t.reto]) ? [+t.reto] : []; }
+function retoDelTest(t){ retosTest(t).forEach(function(i){ var R=RETOS[i];
+    if(!R || D.retos.some(function(x){ return !x.fin && x.n===R.n; })) return;
+    D.retos.push({id:uid(), n:R.n, total:R.total, vale:R.vale, ini:hoy(), fin:null, desde:ahora(), ev:[], vistos:{}, vistosOk:1}); }); }
 function act(a,v,el){
   if(retoAccion(a,v)) return;
   if(D.perfil && (a==='marcar'||a==='guardarPasos'||a==='entrenoFuera'||a==='guardarNum'||a==='guardarDeporte')) U.m0=marcadorHoy(); else U.m0=null;
@@ -2356,7 +2365,11 @@ function accTest(k,v){ var t=U.t;
   if(k==='area' && t.areas.indexOf('dejar')!==-1 && t.dejar && t.dejar.que==='nada') t.dejar.que=null;
   if(k==='animo') t.animo=v;
   if(k==='chungo'){ t.chungo=v; if(v==='propio') setTimeout(function(){ var i=document.getElementById('in-chungo'); if(i) i.focus(); },150); }
-  if(k==='reto') t.reto=v;
+  if(k==='reto'){
+    if(v==='no'){ t.retos=[]; t.reto='no'; }
+    else { var n=+v, L=retosTest(t), j=L.indexOf(n);
+      if(j===-1) L.push(n); else L.splice(j,1);
+      t.retos=L; t.reto = L.length ? String(L[0]) : null; } }
   if(k==='tono'){ t.tono=v; t._tonoTocado=true; t._tonoSug=false; }
   render(); }
 function accCierre(k,v){ var c=U.ck;
