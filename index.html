@@ -740,7 +740,7 @@ input[type=file]{font-size:0}
 /* versión instalada: toda la pantalla, de borde a borde, sin zoom */
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 input,textarea,select{font-size:16px}
-.app{--it:env(safe-area-inset-top,0px);--ib:max(env(safe-area-inset-bottom,0px),var(--ibExtra,0px))}
+.app{--it:max(env(safe-area-inset-top,0px),var(--itExtra,0px));--ib:max(env(safe-area-inset-bottom,0px),var(--ibExtra,0px))}
 @media (max-width:599px){
   body{padding:0;display:block}
   /* pegada a los cuatro bordes de lo que se ve de verdad: la barra de abajo nunca queda cortada */
@@ -768,10 +768,14 @@ input,textarea,select{font-size:16px}
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=a89561c9"></script><script src="banco.js?v=a89561c9"></script><script src="app.js?v=a89561c9"></script>
+<script src="datos.js?v=1129cf49"></script><script src="banco.js?v=1129cf49"></script><script src="app.js?v=1129cf49"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');
+  /* iPhone 12 Pro (y 12, 13, 13 Pro, 14: misma pantalla): 390 × 844, muesca de 47 px arriba y rayita de inicio de 34 px abajo. Medidas fijas, sin fiarse de lo que diga iOS. */
+  var W=Math.min(screen.width,screen.height), H=Math.max(screen.width,screen.height);
+  if(W===390 && H===844){ var fija=function(){ var vert=window.innerHeight>=window.innerWidth; r.style.setProperty('--alto', (vert?844:390)+'px'); r.style.setProperty('--itExtra', vert?'47px':'0px'); r.style.setProperty('--ibExtra', vert?'34px':'21px'); };
+    fija(); window.addEventListener('resize', fija); window.addEventListener('orientationchange', function(){ setTimeout(fija, 300); }); window.addEventListener('pageshow', fija); return; }
   function mide(){ var vert=window.innerHeight>=window.innerWidth, alto=vert?Math.max(screen.height,screen.width):Math.min(screen.height,screen.width), ext=Math.max(0, alto-window.innerHeight);
     if(ext>140){ alto=window.innerHeight; ext=0; }
     r.style.setProperty('--alto', alto+'px'); r.style.setProperty('--ibExtra', (ext?ext+18:0)+'px'); }
