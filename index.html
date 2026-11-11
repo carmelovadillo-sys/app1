@@ -519,8 +519,9 @@ input[type=file]{font-size:0}
 .heroe .h1{margin:0}
 .heroe .estado{margin-top:0}
 .anillo.big{width:146px;height:146px}
-.anillo.big .anillo-n{display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--display);font-size:42px}
-.anillo.big .anillo-n small{font-size:42px;color:var(--text3)}
+.anillo.big .anillo-n{display:flex;flex-direction:column;align-items:center;gap:1px;font-family:var(--display);font-size:44px}
+.anillo.big .cifra{display:block;line-height:1}
+.anillo.big .anillo-n small{font-size:44px;color:var(--text3)}
 .anillo.big .anillo-n .lbl{font-size:11px;letter-spacing:.14em}
 /* Secciones que se abren al tocarlas */
 .plega{padding:0 !important;overflow:hidden}
@@ -817,7 +818,7 @@ html.inst .app:not(.notab)::after{height:calc(max(var(--ibMin,10px),var(--ib)) +
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=4d261b57"></script><script src="banco.js?v=4d261b57"></script><script src="app.js?v=4d261b57"></script>
+<script src="datos.js?v=e3c0a548"></script><script src="banco.js?v=e3c0a548"></script><script src="app.js?v=e3c0a548"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');

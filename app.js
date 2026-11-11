@@ -558,7 +558,7 @@ function anilloBig(n,t){ var R=52, C=2*Math.PI*R, de=U.anillo==null?0:U.anillo, 
   return '<span class="anillo big" aria-label="'+n+' de '+t+' hechas hoy"><svg width="146" height="146" viewBox="0 0 120 120" aria-hidden="true">'+
     '<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="var(--off)" stroke-width="9"/>'+
     (t?'<circle class="arco" cx="60" cy="60" r="'+R+'" fill="none" stroke="var(--acc)" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" style="--de:'+(C*(1-de)).toFixed(1)+';--a:'+(C*(1-a)).toFixed(1)+';stroke-dashoffset:'+(C*(1-a)).toFixed(1)+'" transform="rotate(-90 60 60)"/>':'')+
-    '</svg><span class="anillo-n num">'+(t?n+'<small>/'+t+'</small>':'—')+'<span class="lbl">HOY</span></span></span>'; }
+    '</svg><span class="anillo-n num"><span class="cifra">'+(t?n+'<small>/'+t+'</small>':'—')+'</span><span class="lbl">HOY</span></span></span>'; }
 /* Una sección que se abre al tocarla. Cerrada enseña su resumen, para que nada
    importante desaparezca de la vista. */
 function plega(id, titulo, resumen, icono, dentro, defecto){
