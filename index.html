@@ -584,24 +584,26 @@ input[type=file]{font-size:0}
 
 /* ===== Cristal: fondo vivo detrás y piezas esmeriladas encima ===== */
 .app{isolation:isolate;overflow:clip}
-/* el aura entra por la izquierda y cambia de color con la hora del día */
-.app{--au2:#5B8CFF;--au3:#B45BFF;--auF:38%;--auG:30%}
-.app[data-franja="manana"]{--au2:#FFA42B;--au3:#EC407A;--auF:72%;--auG:56%}
-.app[data-franja="mediodia"]{--au2:#FFC857;--au3:#4FD1A5;--auF:66%;--auG:50%}
-.app[data-franja="tarde"]{--au2:#6D5CFF;--au3:#29B6F6;--auF:76%;--auG:60%}
-.app[data-franja="noche"]{--au2:#3E4AA8;--au3:#1A7C7A;--auF:64%;--auG:46%}
+/* El aura entra por la izquierda. Manda el color que eliges tú; la hora solo
+   aporta la luz del momento: amanecer naranja, día azul claro, ocaso ámbar,
+   noche azul profundo. Nada de violetas raros. */
+.app{--au2:#5A86B8;--auF:30%}
+.app[data-franja="manana"]{--au2:#FF8A3D;--auF:34%}
+.app[data-franja="mediodia"]{--au2:#58A6DC;--auF:28%}
+.app[data-franja="tarde"]{--au2:#E8743C;--auF:32%}
+.app[data-franja="noche"]{--au2:#2F4396;--auF:30%}
 /* OJO: el pseudo mide 150% de la pantalla (inset -25%), así que un 17% suyo
    es el borde izquierdo de verdad. Con valores más bajos el aura se quedaba fuera. */
 .app::before{content:"";position:absolute;inset:-25%;z-index:0;pointer-events:none;
   transition:background 1.6s linear;
   background:
-    radial-gradient(40% 26% at 19% 22%, color-mix(in srgb,var(--acc) 78%,transparent), transparent 74%),
-    radial-gradient(44% 30% at 14% 38%, color-mix(in srgb,var(--au2) var(--auF),transparent), transparent 76%),
-    radial-gradient(42% 30% at 19% 56%, color-mix(in srgb,var(--au3) var(--auG),transparent), transparent 76%),
-    radial-gradient(30% 24% at 24% 72%, color-mix(in srgb,var(--au2) 40%,transparent), transparent 74%);
+    radial-gradient(40% 26% at 19% 22%, color-mix(in srgb,var(--acc) 52%,transparent), transparent 74%),
+    radial-gradient(44% 30% at 14% 40%, color-mix(in srgb,var(--au2) var(--auF),transparent), transparent 76%),
+    radial-gradient(42% 30% at 20% 58%, color-mix(in srgb,var(--acc) 26%,transparent), transparent 76%),
+    radial-gradient(30% 24% at 24% 74%, color-mix(in srgb,var(--au2) 16%,transparent), transparent 74%);
   filter:blur(34px);animation:aurora 26s ease-in-out infinite alternate;will-change:transform}
-.app[data-tema="claro"]::before{opacity:.62}
-@media (prefers-color-scheme: light){ .app[data-tema="auto"]::before{opacity:.62} }
+.app[data-tema="claro"]::before{opacity:.72}
+@media (prefers-color-scheme: light){ .app[data-tema="auto"]::before{opacity:.72} }
 /* punto "en directo" de Hoy */
 .endirecto{position:relative;width:8px;height:8px;flex:0 0 auto;display:inline-block}
 .endirecto::before,.endirecto::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--acc)}
@@ -790,7 +792,7 @@ input,textarea,select{font-size:16px}
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=55858725"></script><script src="banco.js?v=55858725"></script><script src="app.js?v=55858725"></script>
+<script src="datos.js?v=b22d49e4"></script><script src="banco.js?v=b22d49e4"></script><script src="app.js?v=b22d49e4"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');
