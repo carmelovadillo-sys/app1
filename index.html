@@ -394,7 +394,7 @@ figure{margin:0}
 .app:not(.notab) .screen{padding-bottom:104px}
 .app.conbarra .screen{padding-bottom:172px}
 .app:not(.notab)::after{content:"";position:absolute;left:0;right:0;bottom:0;height:120px;z-index:3;pointer-events:none;
-  background:linear-gradient(to bottom, color-mix(in srgb,var(--bg) 0%,transparent), color-mix(in srgb,var(--bg) 85%,transparent) 70%)}
+  background:linear-gradient(to bottom, color-mix(in srgb,var(--bg) 0%,transparent), color-mix(in srgb,var(--bg) 88%,transparent) 62%, var(--bg) 88%)}
 .tabbar{position:absolute;z-index:5;left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));bottom:10px;
   height:64px;box-sizing:border-box;padding:4px;gap:2px;justify-content:space-between;border:var(--borde);border-radius:32px;
   background:var(--cristal);-webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);
@@ -783,6 +783,7 @@ html.inst .tabbar{bottom:max(var(--ibMin,10px),var(--ib))}
 html.inst .barra-cta{bottom:calc(max(var(--ibMin,10px),var(--ib)) + 74px)}
 html.inst .app:not(.notab) .screen{padding-bottom:calc(max(var(--ibMin,10px),var(--ib)) + 104px)}
 html.inst .app.conbarra .screen{padding-bottom:calc(max(var(--ibMin,10px),var(--ib)) + 172px)}
+html.inst .app:not(.notab)::after{height:calc(max(var(--ibMin,10px),var(--ib)) + 120px)}
 .app:not(.notab) .screen{padding-bottom:calc(var(--ib) + 104px)}
 .app.conbarra .screen{padding-bottom:calc(var(--ib) + 172px)}
 .app.condesc .screen{padding-bottom:calc(var(--ib) + 176px)}
@@ -798,7 +799,7 @@ html.inst .app.conbarra .screen{padding-bottom:calc(max(var(--ibMin,10px),var(--
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=37bdbfb0"></script><script src="banco.js?v=37bdbfb0"></script><script src="app.js?v=37bdbfb0"></script>
+<script src="datos.js?v=75dfd694"></script><script src="banco.js?v=75dfd694"></script><script src="app.js?v=75dfd694"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');
