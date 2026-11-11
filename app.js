@@ -554,12 +554,11 @@ function anillo(n,t){ var R=26, C=2*Math.PI*R, de=U.anillo==null?0:U.anillo, a=t
   return '<span class="anillo" aria-label="'+n+' de '+t+'"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="'+R+'" fill="none" stroke="var(--off)" stroke-width="7"/><circle class="arco" cx="32" cy="32" r="'+R+'" fill="none" stroke="var(--acc)" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" style="--de:'+(C*(1-de)).toFixed(1)+';--a:'+(C*(1-a)).toFixed(1)+';stroke-dashoffset:'+(C*(1-a)).toFixed(1)+'" transform="rotate(-90 32 32)"/></svg><span class="anillo-n num">'+n+'<small>/'+t+'</small></span></span>'; }
 /* Anillo grande por segmentos: un arco por cada cosa de hoy. Cada vez que marcas,
    se enciende un arco entero: se ve de lejos y da más gusto que una barra. */
-function anilloSeg(n,t){ var R=52, C=2*Math.PI*R, arcos='';
-  if(!t) arcos='<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="var(--off)" stroke-width="8"/>';
-  else { var slot=C/t, hueco=Math.max(5,Math.min(14,slot*0.2)), largo=Math.max(2,slot-hueco), redondo=largo>14;
-    for(var i=0;i<t;i++){ var on=i<n, nuevo = on && U.recien && i===n-1;
-      arcos+='<circle class="'+(nuevo?'seg-nuevo':'')+'" cx="60" cy="60" r="'+R+'" fill="none" stroke="'+(on?'var(--acc)':'var(--off)')+'" stroke-width="8"'+(redondo?' stroke-linecap="round"':'')+' stroke-dasharray="'+largo.toFixed(1)+' '+(C-largo).toFixed(1)+'" stroke-dashoffset="'+(-i*slot).toFixed(1)+'"/>'; } }
-  return '<span class="anillo big" aria-label="'+n+' de '+t+' hechas hoy"><svg width="146" height="146" viewBox="0 0 120 120" aria-hidden="true" style="transform:rotate(-90deg)">'+arcos+'</svg><span class="anillo-n num">'+(t?n+'<small>/'+t+'</small>':'—')+'<span class="lbl">HOY</span></span></span>'; }
+function anilloBig(n,t){ var R=52, C=2*Math.PI*R, de=U.anillo==null?0:U.anillo, a=t?n/t:0; U.anillo=a;
+  return '<span class="anillo big" aria-label="'+n+' de '+t+' hechas hoy"><svg width="146" height="146" viewBox="0 0 120 120" aria-hidden="true">'+
+    '<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="var(--off)" stroke-width="9"/>'+
+    (t?'<circle class="arco" cx="60" cy="60" r="'+R+'" fill="none" stroke="var(--acc)" stroke-width="9" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" style="--de:'+(C*(1-de)).toFixed(1)+';--a:'+(C*(1-a)).toFixed(1)+';stroke-dashoffset:'+(C*(1-a)).toFixed(1)+'" transform="rotate(-90 60 60)"/>':'')+
+    '</svg><span class="anillo-n num">'+(t?n+'<small>/'+t+'</small>':'—')+'<span class="lbl">HOY</span></span></span>'; }
 /* Una sección que se abre al tocarla. Cerrada enseña su resumen, para que nada
    importante desaparezca de la vista. */
 function plega(id, titulo, resumen, icono, dentro, defecto){
@@ -597,7 +596,7 @@ V.hoy = function(){ var f=hoy(), p=D.perfil, d=D.dias[f]||{h:{}}, ts=tareas(f), 
   var nv=nivelDe(c);
   var instalar = (!esInstalada() && !D.vistos.instalar && diaN(f)>=1 && (APP_URL || !EN_CLAUDE)) ? '<div class="box col" style="padding:12px 14px;gap:8px"><div class="row sb"><strong style="font-size:15px">Tenla como una app</strong><button type="button" class="link" style="min-height:32px;padding:0" data-a="cerrarInstalar">Cerrar</button></div><span style="font-size:13px;color:var(--text2)">Con su icono, a pantalla completa y sin internet en el gym.</span><button type="button" class="chip" style="border:var(--lleno)" data-a="instalarSheet">Cómo instalarla</button></div>' : '';
   return sinTest+instalar+(sinGuardar?'<div class="box pad" style="border:2px solid #D93A40"><strong>Este navegador no deja guardar.</strong><p class="p2" style="font-size:14px">Puede que estés en una ventana privada. Ábrela en una normal o tus datos se perderán al cerrarla.</p></div>':'')+'<div class="row sb"><span class="lbl">'+fechaLarga(f)+' · día '+diaN(f)+'</span><span class="row" style="gap:8px"><button type="button" class="nivel-chip" data-a="go" data-v="medallas" aria-label="Nivel '+nv.i+': '+nv.n+'. Ver medallas">'+ic('retos',14,2.4)+'<span>'+nv.n+'</span></button><button type="button" class="ayuda" data-a="guia" aria-label="Cómo funciona">?</button><button type="button" class="avatar" data-a="go" data-v="ajustes" aria-label="Tu perfil y ajustes">'+avatarIn()+'</button></span></div>'+
-  '<div class="heroe">'+anilloSeg(n,ts.length)+
+  '<div class="heroe">'+anilloBig(n,ts.length)+
   '<h1 class="h1 frase">'+e(titularHoy(f,{cerrado:!!d.cerrado, dificil:!!d.dificil, total:ts.length, hechas:n, falta:falta, todo:todo, dias:c}))+'</h1>'+
   '<span class="estado"><b>'+e(estado)+'</b>'+(dr?' '+e(dr):'')+'</span></div>'+
   wrapCard(f)+compromisoCard(f)+

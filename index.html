@@ -514,7 +514,7 @@ input[type=file]{font-size:0}
 @keyframes anilloA{from{stroke-dashoffset:var(--de)}to{stroke-dashoffset:var(--a)}}
 .anillo-n{position:relative;font-size:24px;line-height:1}
 .anillo-n small{font-size:14px;color:var(--text3)}
-/* Anillo grande por segmentos: uno por tarea del día */
+/* Anillo grande: la cara de Hoy. Centrado, con las hechas dentro. */
 .heroe{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;margin:2px 0 2px}
 .heroe .h1{margin:0}
 .heroe .estado{margin-top:0}
@@ -522,8 +522,6 @@ input[type=file]{font-size:0}
 .anillo.big .anillo-n{display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--display);font-size:42px}
 .anillo.big .anillo-n small{font-size:42px;color:var(--text3)}
 .anillo.big .anillo-n .lbl{font-size:11px;letter-spacing:.14em}
-.seg-nuevo{animation:segIn .5s var(--ease-out)}
-@keyframes segIn{0%{opacity:0;stroke-width:2}60%{opacity:1;stroke-width:11}100%{stroke-width:8}}
 /* Secciones que se abren al tocarlas */
 .plega{padding:0 !important;overflow:hidden}
 .plega-h{display:flex;align-items:center;gap:12px;width:100%;padding:14px;min-height:60px;background:none;border:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
@@ -557,7 +555,7 @@ input[type=file]{font-size:0}
 .srow.ok .sck{animation:bxpop .32s ease-out}
 .tb{font-size:10.5px;letter-spacing:.04em}
 .opt.mid.c{align-items:center;justify-content:center;text-align:center}
-@media (prefers-reduced-motion: reduce){ .cele2.anim,.cele-grande.anim,.anillo .arco,.seg-nuevo,.plega-c,.toast.gol,.mbar .llena,.fila.pop .bx::after{animation:none} }
+@media (prefers-reduced-motion: reduce){ .cele2.anim,.cele-grande.anim,.anillo .arco,.plega-c,.toast.gol,.mbar .llena,.fila.pop .bx::after{animation:none} }
 
 /* ===== Enganche: niveles, medallas, semana, dejar, gym ===== */
 .srow .sn{border:none;background:none;padding:0;height:48px;text-align:left;font-family:var(--display);font-size:20px;color:var(--text2) !important;cursor:pointer}
@@ -819,7 +817,7 @@ html.inst .app:not(.notab)::after{height:calc(max(var(--ibMin,10px),var(--ib)) +
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=22a26528"></script><script src="banco.js?v=22a26528"></script><script src="app.js?v=22a26528"></script>
+<script src="datos.js?v=4d261b57"></script><script src="banco.js?v=4d261b57"></script><script src="app.js?v=4d261b57"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');
