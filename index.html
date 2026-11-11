@@ -740,11 +740,13 @@ input[type=file]{font-size:0}
 /* versión instalada: toda la pantalla, de borde a borde, sin zoom */
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 input,textarea,select{font-size:16px}
-.app{--it:env(safe-area-inset-top,0px);--ib:env(safe-area-inset-bottom,0px)}
+.app{--it:env(safe-area-inset-top,0px);--ib:max(env(safe-area-inset-bottom,0px),var(--ibExtra,0px))}
 @media (max-width:599px){
   body{padding:0;display:block}
   /* pegada a los cuatro bordes de lo que se ve de verdad: la barra de abajo nunca queda cortada */
   .app{position:fixed;top:0;left:0;right:0;bottom:0;width:auto;height:auto;min-height:0;border:0;border-radius:0;box-shadow:none}
+  /* instalada: la app llega hasta el borde de abajo de la pantalla, aunque iOS diga que se ve menos */
+  html.inst .app{bottom:auto;height:var(--alto,100%)}
   html,body{background:var(--fondoApp,#101113)}
   .cap{display:none}
 }
@@ -766,7 +768,14 @@ input,textarea,select{font-size:16px}
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=b4fee714"></script><script src="banco.js?v=b4fee714"></script><script src="app.js?v=b4fee714"></script>
+<script src="datos.js?v=a89561c9"></script><script src="banco.js?v=a89561c9"></script><script src="app.js?v=a89561c9"></script>
+<script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
+  var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
+  var r=document.documentElement; r.classList.add('inst');
+  function mide(){ var vert=window.innerHeight>=window.innerWidth, alto=vert?Math.max(screen.height,screen.width):Math.min(screen.height,screen.width), ext=Math.max(0, alto-window.innerHeight);
+    if(ext>140){ alto=window.innerHeight; ext=0; }
+    r.style.setProperty('--alto', alto+'px'); r.style.setProperty('--ibExtra', (ext?ext+18:0)+'px'); }
+  mide(); window.addEventListener('resize', mide); window.addEventListener('orientationchange', function(){ setTimeout(mide, 300); }); window.addEventListener('pageshow', mide); })();</script>
 <script>(function(){ /* lo que asome detrás de la app (por arriba o por abajo) lleva su mismo color: nunca una franja de otro color */
   var a=document.getElementById('app'); if(!a) return; var r=document.documentElement;
   function pinta(){ try{ var c=getComputedStyle(a).backgroundColor; if(c) r.style.setProperty('--fondoApp', c); }catch(e){} }
