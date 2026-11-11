@@ -514,6 +514,24 @@ input[type=file]{font-size:0}
 @keyframes anilloA{from{stroke-dashoffset:var(--de)}to{stroke-dashoffset:var(--a)}}
 .anillo-n{position:relative;font-size:24px;line-height:1}
 .anillo-n small{font-size:14px;color:var(--text3)}
+/* Anillo grande por segmentos: uno por tarea del día */
+.heroe{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;margin:2px 0 2px}
+.heroe .h1{margin:0}
+.heroe .estado{margin-top:0}
+.anillo.big{width:146px;height:146px}
+.anillo.big .anillo-n{display:flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--display);font-size:42px}
+.anillo.big .anillo-n small{font-size:42px;color:var(--text3)}
+.anillo.big .anillo-n .lbl{font-size:11px;letter-spacing:.14em}
+.seg-nuevo{animation:segIn .5s var(--ease-out)}
+@keyframes segIn{0%{opacity:0;stroke-width:2}60%{opacity:1;stroke-width:11}100%{stroke-width:8}}
+/* Secciones que se abren al tocarlas */
+.plega{padding:0 !important;overflow:hidden}
+.plega-h{display:flex;align-items:center;gap:12px;width:100%;padding:14px;min-height:60px;background:none;border:none;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.plega-ch{color:var(--text3);flex-shrink:0;display:inline-flex;transition:transform .2s var(--ease-out)}
+.plega.ab .plega-ch{transform:rotate(90deg)}
+.plega-c{display:flex;flex-direction:column;gap:8px;padding:0 14px 12px;animation:plegaIn .24s var(--ease-out)}
+@keyframes plegaIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.plega-c>.box,.plega-c>.match{background:var(--off);border-radius:14px;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
 .hoy-box{transition:box-shadow .4s ease}
 .hoy-box.todo{border:var(--lleno);box-shadow:0 0 0 1px var(--acc),0 12px 36px color-mix(in srgb,var(--acc) 22%,transparent)}
 .toast.gol{background:var(--acc);color:var(--onAcc);font-family:var(--display);font-size:20px;letter-spacing:.02em;font-weight:400;animation:golT .5s cubic-bezier(.34,1.56,.64,1)}
@@ -539,7 +557,7 @@ input[type=file]{font-size:0}
 .srow.ok .sck{animation:bxpop .32s ease-out}
 .tb{font-size:10.5px;letter-spacing:.04em}
 .opt.mid.c{align-items:center;justify-content:center;text-align:center}
-@media (prefers-reduced-motion: reduce){ .cele2.anim,.cele-grande.anim,.anillo .arco,.toast.gol,.mbar .llena,.fila.pop .bx::after{animation:none} }
+@media (prefers-reduced-motion: reduce){ .cele2.anim,.cele-grande.anim,.anillo .arco,.seg-nuevo,.plega-c,.toast.gol,.mbar .llena,.fila.pop .bx::after{animation:none} }
 
 /* ===== Enganche: niveles, medallas, semana, dejar, gym ===== */
 .srow .sn{border:none;background:none;padding:0;height:48px;text-align:left;font-family:var(--display);font-size:20px;color:var(--text2) !important;cursor:pointer}
@@ -801,7 +819,7 @@ html.inst .app:not(.notab)::after{height:calc(max(var(--ibMin,10px),var(--ib)) +
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=fc4a0693"></script><script src="banco.js?v=fc4a0693"></script><script src="app.js?v=fc4a0693"></script>
+<script src="datos.js?v=22a26528"></script><script src="banco.js?v=22a26528"></script><script src="app.js?v=22a26528"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');

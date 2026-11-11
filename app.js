@@ -36,7 +36,7 @@ function azar(a){ return a[Math.floor(Math.random()*a.length)]; }
 function pct(n){ return Math.round((Math.pow(1.01,n)-1)*100); }
 
 /* ---------- datos guardados ---------- */
-function nuevoD(){ return {v:1, perfil:null, dias:{}, entrenos:[], deportes:[], actual:null, rutinas:[], retos:[], propios:[], vistos:{}, usadas:{}, chat:[], ts:0, copia:0, ultimaVisita:null}; }
+function nuevoD(){ return {v:1, perfil:null, dias:{}, entrenos:[], deportes:[], actual:null, rutinas:[], retos:[], propios:[], vistos:{}, usadas:{}, abierto:{}, chat:[], ts:0, copia:0, ultimaVisita:null}; }
 function normalizar(d){ var b=nuevoD(); for(var k in b){ if(d[k]==null) d[k]=b[k]; } return d; }
 function cargar(){ try{ var t=localStorage.getItem(KEY); if(!t) return null; var d=JSON.parse(t); return (d && d.v===1) ? normalizar(d) : null; }catch(err){ return null; } }
 var D = cargar() || nuevoD();
@@ -552,12 +552,40 @@ function pitidoCard(){ var f=hoy(); if(!partidoOn() || D.perfil.pitido===false) 
   return '<div class="box col" style="padding:12px 14px;gap:8px;border:var(--lleno)"><div class="row sb"><span class="lbl acc">Pitido final · semana pasada</span><button type="button" class="link" style="min-height:32px;padding:0" data-a="cerrarPitido" data-v="'+prev+'">Cerrar</button></div><div class="row sb"><strong style="font-size:17px">'+r+' a tu yo de antes</strong><span class="sc nw" style="font-size:40px">'+m[0]+'–'+m[1]+'</span></div><button type="button" class="link" style="align-self:flex-start;min-height:32px;padding:0" data-a="verSemana" data-v="'+prev+'">Ver las jugadas</button></div>'; }
 function anillo(n,t){ var R=26, C=2*Math.PI*R, de=U.anillo==null?0:U.anillo, a=t?n/t:0; U.anillo=a;
   return '<span class="anillo" aria-label="'+n+' de '+t+'"><svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="'+R+'" fill="none" stroke="var(--off)" stroke-width="7"/><circle class="arco" cx="32" cy="32" r="'+R+'" fill="none" stroke="var(--acc)" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" style="--de:'+(C*(1-de)).toFixed(1)+';--a:'+(C*(1-a)).toFixed(1)+';stroke-dashoffset:'+(C*(1-a)).toFixed(1)+'" transform="rotate(-90 32 32)"/></svg><span class="anillo-n num">'+n+'<small>/'+t+'</small></span></span>'; }
+/* Anillo grande por segmentos: un arco por cada cosa de hoy. Cada vez que marcas,
+   se enciende un arco entero: se ve de lejos y da más gusto que una barra. */
+function anilloSeg(n,t){ var R=52, C=2*Math.PI*R, arcos='';
+  if(!t) arcos='<circle cx="60" cy="60" r="'+R+'" fill="none" stroke="var(--off)" stroke-width="8"/>';
+  else { var slot=C/t, hueco=Math.max(5,Math.min(14,slot*0.2)), largo=Math.max(2,slot-hueco), redondo=largo>14;
+    for(var i=0;i<t;i++){ var on=i<n, nuevo = on && U.recien && i===n-1;
+      arcos+='<circle class="'+(nuevo?'seg-nuevo':'')+'" cx="60" cy="60" r="'+R+'" fill="none" stroke="'+(on?'var(--acc)':'var(--off)')+'" stroke-width="8"'+(redondo?' stroke-linecap="round"':'')+' stroke-dasharray="'+largo.toFixed(1)+' '+(C-largo).toFixed(1)+'" stroke-dashoffset="'+(-i*slot).toFixed(1)+'"/>'; } }
+  return '<span class="anillo big" aria-label="'+n+' de '+t+' hechas hoy"><svg width="146" height="146" viewBox="0 0 120 120" aria-hidden="true" style="transform:rotate(-90deg)">'+arcos+'</svg><span class="anillo-n num">'+(t?n+'<small>/'+t+'</small>':'—')+'<span class="lbl">HOY</span></span></span>'; }
+/* Una sección que se abre al tocarla. Cerrada enseña su resumen, para que nada
+   importante desaparezca de la vista. */
+function plega(id, titulo, resumen, icono, dentro, defecto){
+  if(!dentro) return '';
+  var g=D.abierto||{}, ab = g[id]==null ? !!defecto : !!g[id];
+  return '<section class="box col plega'+(ab?' ab':'')+'">'+
+    '<button type="button" class="plega-h" data-a="plega" data-v="'+id+'" aria-expanded="'+ab+'">'+
+      '<span class="thumb" aria-hidden="true">'+icono+'</span>'+
+      '<span class="col" style="gap:2px;min-width:0;flex:1"><strong style="font-size:16px">'+titulo+'</strong><span style="font-size:13px;color:var(--text2)">'+resumen+'</span></span>'+
+      '<span class="plega-ch">'+ic('chev',18)+'</span></button>'+
+    (ab ? '<div class="plega-c">'+dentro+'</div>' : '')+'</section>'; }
+function resumenRetos(f){ var r=retosActivos(f)[0], p=D.perfil, l=[];
+  if(r) l.push(nombreReto(r)+(r.ini<=f ? ' · día '+diaReto(r,f)+' de '+r.total : ' · empieza pronto'));
+  if(p.dejar && p.dejar.desde && p.areas.indexOf('dejar')!==-1){ var dd=Math.floor((ahora()-p.dejar.desde)/86400000);
+    l.push(plural(dd,'día','días')+' '+DEJAR[p.dejar.que||'otra'][1]+(eurosDia()?' · '+num(dd*eurosDia())+' €':'')); }
+  return l.length ? l.join(' · ') : 'Cortos, de 5 a 30 días, con margen'; }
+function resumenGym(f){ var p=D.perfil, l=[];
+  if(p.areas.indexOf('entreno')!==-1 && (p.diasGym||[]).length) l.push('Gym '+entrenosSemana(lunesDe(f))+' de '+p.diasGym.length+' esta semana');
+  if(partidoOn()){ var m=marcador(jugadas(lunesDe(f),f)); l.push(m[0]>m[1]?'vas ganando '+m[0]+'–'+m[1]:(m[0]<m[1]?'vas perdiendo '+m[0]+'–'+m[1]:'empatas '+m[0]+'–'+m[1])); }
+  return l.length ? cap(l.join(' · ')) : 'Tu semana y tu partido'; }
 V.hoy = function(){ var f=hoy(), p=D.perfil, d=D.dias[f]||{h:{}}, ts=tareas(f), n=nHechas(f), seg='', filas='';
   fijarAreasHoy();
   ts.forEach(function(k,i){ seg+='<span class="'+(i<n?'on':'')+'"></span>'; filas+=filaTarea(k,f); });
-  var descansoGym = p.areas.indexOf('entreno')!==-1 && !planGym(f) && !d.dificil;
-  if(descansoGym) filas+='<button type="button" class="fila" data-a="'+(D.actual?'go':'tab')+'" data-v="'+(D.actual?'entreno':'gym')+'" style="opacity:.85"><span class="bx" aria-hidden="true" style="border-style:dashed"></span><span class="col" style="gap:2px;flex:1"><span class="lbl">GYM</span><strong style="font-size:15px">'+(entrenoEl(f)?'Entreno extra hecho':(D.actual?'Entreno en curso':'Hoy no toca gym'))+'</strong><span style="font-size:13px;color:var(--text2)">'+(entrenoEl(f)?'Suma en tu semana de gym':(D.actual?'Al terminarlo, suma en tu semana de gym':'Descansar también es parte del plan. No cuenta como fallo.'))+'</span></span></button>';
-  retosActivos().forEach(function(r){ filas+=filaReto(r,f); });
+  var descansoGym = p.areas.indexOf('entreno')!==-1 && !planGym(f) && !d.dificil, gymFila='', retoFilas='';
+  if(descansoGym) gymFila+='<button type="button" class="fila" data-a="'+(D.actual?'go':'tab')+'" data-v="'+(D.actual?'entreno':'gym')+'" style="opacity:.85"><span class="bx" aria-hidden="true" style="border-style:dashed"></span><span class="col" style="gap:2px;flex:1"><span class="lbl">GYM</span><strong style="font-size:15px">'+(entrenoEl(f)?'Entreno extra hecho':(D.actual?'Entreno en curso':'Hoy no toca gym'))+'</strong><span style="font-size:13px;color:var(--text2)">'+(entrenoEl(f)?'Suma en tu semana de gym':(D.actual?'Al terminarlo, suma en tu semana de gym':'Descansar también es parte del plan. No cuenta como fallo.'))+'</span></span></button>';
+  retosActivos().forEach(function(r){ retoFilas+=filaReto(r,f); });
   var todo = ts.length>0 && n===ts.length, falta=ts.length-n, c=cumplidosHasta(f);
   var estado = d.dificil ? 'Hoy, lo mínimo.' : (d.cerrado ? 'Día cerrado.' : (todo ? 'Todo hecho.' : (ts.length===0 ? 'Hoy descansas.' : (diaN(f)===1 && n===0 ? 'Hoy empiezas.' : (falta===1 ? 'Te falta una.' : 'Te faltan '+falta+'.')))));
   var dr = datoReal(f);
@@ -569,16 +597,17 @@ V.hoy = function(){ var f=hoy(), p=D.perfil, d=D.dias[f]||{h:{}}, ts=tareas(f), 
   var nv=nivelDe(c);
   var instalar = (!esInstalada() && !D.vistos.instalar && diaN(f)>=1 && (APP_URL || !EN_CLAUDE)) ? '<div class="box col" style="padding:12px 14px;gap:8px"><div class="row sb"><strong style="font-size:15px">Tenla como una app</strong><button type="button" class="link" style="min-height:32px;padding:0" data-a="cerrarInstalar">Cerrar</button></div><span style="font-size:13px;color:var(--text2)">Con su icono, a pantalla completa y sin internet en el gym.</span><button type="button" class="chip" style="border:var(--lleno)" data-a="instalarSheet">Cómo instalarla</button></div>' : '';
   return sinTest+instalar+(sinGuardar?'<div class="box pad" style="border:2px solid #D93A40"><strong>Este navegador no deja guardar.</strong><p class="p2" style="font-size:14px">Puede que estés en una ventana privada. Ábrela en una normal o tus datos se perderán al cerrarla.</p></div>':'')+'<div class="row sb"><span class="lbl">'+fechaLarga(f)+' · día '+diaN(f)+'</span><span class="row" style="gap:8px"><button type="button" class="nivel-chip" data-a="go" data-v="medallas" aria-label="Nivel '+nv.i+': '+nv.n+'. Ver medallas">'+ic('retos',14,2.4)+'<span>'+nv.n+'</span></button><button type="button" class="ayuda" data-a="guia" aria-label="Cómo funciona">?</button><button type="button" class="avatar" data-a="go" data-v="ajustes" aria-label="Tu perfil y ajustes">'+avatarIn()+'</button></span></div>'+
-  '<h1 class="h1 frase" style="margin-top:2px">'+e(titularHoy(f,{cerrado:!!d.cerrado, dificil:!!d.dificil, total:ts.length, hechas:n, falta:falta, todo:todo, dias:c}))+'</h1>'+
-  '<span class="estado"><b>'+e(estado)+'</b>'+(dr?' '+e(dr):'')+'</span>'+
+  '<div class="heroe">'+anilloSeg(n,ts.length)+
+  '<h1 class="h1 frase">'+e(titularHoy(f,{cerrado:!!d.cerrado, dificil:!!d.dificil, total:ts.length, hechas:n, falta:falta, todo:todo, dias:c}))+'</h1>'+
+  '<span class="estado"><b>'+e(estado)+'</b>'+(dr?' '+e(dr):'')+'</span></div>'+
   wrapCard(f)+compromisoCard(f)+
   pitidoCard()+
-  (partidoOn() ? matchMini() : '')+
-  '<section class="box col hoy-box'+(todo?' todo':'')+'" style="padding:12px 14px 0;gap:8px" aria-label="Lo de hoy">'+
-  '<div class="row" style="gap:14px">'+anillo(n,ts.length)+'<span class="col" style="gap:2px;flex:1;min-width:0"><span class="row" style="gap:8px"><span class="endirecto" aria-hidden="true"></span><span class="lbl" style="color:var(--text)">Lo de hoy · tu 1%</span></span><span style="font-size:13px;color:var(--text2)">'+(todo?'Hecho. Curva +'+pct(c)+' %':(ts.length?'Te '+(falta===1?'falta 1':'faltan '+falta)+' para subir al +'+pct(c+1)+' %':'Hoy, descanso'))+'</span></span><span class="col" style="align-items:flex-end;gap:0"><span class="num acc" style="font-size:26px">+'+pct(c)+'%</span><span class="lbl">Curva</span></span></div>'+
+  '<section class="box col hoy-box'+(todo?' todo':'')+'" style="padding:4px 14px 0;gap:8px" aria-label="Lo de hoy">'+
   filas+'<p style="margin:0;padding:10px 0 12px;border-top:var(--fina);font-size:13px;color:var(--text2)">'+pie+'</p></section>'+
-  dejarCard()+
-  (!retosActivos().length ? '<button type="button" class="box row sb" style="padding:12px 14px;text-align:left;width:100%" data-a="tab" data-v="retos"><span class="row" style="gap:12px"><span class="thumb" aria-hidden="true">'+ic('retos',24,2.2)+'</span><span class="col" style="gap:2px"><strong style="font-size:15px">Empieza un reto</strong><span style="font-size:13px;color:var(--text2)">Cortos, de 5 a 30 días, con margen</span></span></span><span style="color:var(--text3)">'+ic('chev',18)+'</span></button>' : '')+
+  plega('retos','Retos', resumenRetos(f), ic('retos',22,2.2),
+    dejarCard()+retoFilas+(!retosActivos().length ? '<button type="button" class="chip" style="border:var(--lleno)" data-a="tab" data-v="retos">Empezar un reto</button>' : ''), true)+
+  plega('gym','Gym y partido', resumenGym(f), ic('gym',22,2.2),
+    gymFila+(partidoOn() ? matchMini() : ''), false)+
   (ayerSinCerrar ? '<button type="button" class="box row sb" style="padding:12px 14px;text-align:left;width:100%" data-a="cerrarDia" data-v="'+ayer+'"><span class="col" style="gap:2px"><strong style="font-size:15px">Ayer se quedó sin cerrar</strong><span style="font-size:13px;color:var(--text2)">Ciérralo ahora: son 30 segundos.</span></span><span style="color:var(--text3)">'+ic('chev',18)+'</span></button>' : '')+
   (copiaVieja ? '<div class="box col" style="padding:12px 14px;gap:8px"><strong style="font-size:15px">Haz una copia de tus datos</strong><span style="font-size:13px;color:var(--text2)">Se guardan en este móvil. Si borras los datos de Safari, se pierden. Una copia a la semana y listo.</span><div class="grid2"><button type="button" class="chip" style="border:var(--lleno)" data-a="copia">Descargar copia</button><button type="button" class="chip" data-a="copiaLuego" data-v="'+lunesDe(f)+'">Luego</button></div></div>' : '')+
   '<button type="button" class="box pad" style="text-align:left;width:100%" data-a="tab" data-v="mister" aria-label="Míster: '+e(misterHoy(f))+'. Abrir el chat">'+M(e(misterHoy(f)))+'</button>'+
@@ -2241,6 +2270,7 @@ function act(a,v,el){
   switch(a){
     case 'go': if(v==='partido') U.semana=null; go(v); break;
     case 'back': back(); break;
+    case 'plega': if(!D.abierto) D.abierto={}; var abAnt = D.abierto[v]==null ? (v==='retos') : !!D.abierto[v]; D.abierto[v]=!abAnt; guardar(); render(); break;
     case 'tab': U.hist=[]; U.prevPant=U.pantalla; U.pantalla=v; U.toast=''; U.sheet=null; if(v==='progreso') U.mes=null; if(v==='mister') U.qr=U.qr==='cuesta'?'cuesta':null; render(); if(v==='mister') bajarChat(); break;
     case 'retest': var pp=D.perfil, b=pp.base||{}; U.t={nombre:pp.nombre, edad:typeof pp.edad==='number'?String(pp.edad):'', areas:pp.areas.slice(), diasGym:(pp.diasGym||[]).slice(), dejar:pp.dejar?{que:pp.dejar.que, euros:pp.dejar.euros||''}:{}, deporte:b.deporte, movil:b.movil, sueno:b.sueno, comida:b.comida, pasos:b.pasos, nivel:pp.nivel, objetivo:pp.objetivo, donde:pp.donde, tiempo:pp.tiempo?String(pp.tiempo):null, animo:pp.animo, abandono:pp.abandono, motiva:pp.motiva, tono:pp.tono, celebra:pp.celebra, tema:pp.tema||'auto', color:pp.color||'amarillo', peso:pp.peso!=null?String(pp.peso):'', altura:pp.altura!=null?String(pp.altura):'', chungo:pp.chungo||null, chungoTxt:pp.chungoTxt||'', reto:null, _tonoTocado:true, _celebraTocado:!!pp.celebra}; U.tRetosTodos=false; U.hist=[]; go('nombre'); break;
     case 'ajCelebra': p.celebra=v; p.sonido = v!=='tranqui'; guardar(); render(); if(v==='tope') celebrar({tipo:'mini'}); break;
