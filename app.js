@@ -2116,7 +2116,7 @@ function titularHoy(f, st){
   else cat='faltan';
   var L=(typeof TITU!=='undefined' && TITU[cat]) ? TITU[cat] : null;
   if(!L || !L.length) return st.todo ? 'Todo hecho.' : 'A por hoy.';
-  var t=L[(diaN(f)*3 + cat.length) % L.length];
+  var t=L[(diaN(f)*7 + cat.length) % L.length];
   return t.replace('{x}', String(st.falta)).replace('{d}', String(st.dias))
           .replace(/,? ?\[nombre\]/, p.nombre ? ', '+p.nombre : '');
 }
