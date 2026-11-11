@@ -1028,22 +1028,63 @@ function casi(a,b){ if(Math.abs(a.length-b.length)>1) return false; var i=0,j=0,
 function coincide(x,q,fz){ if(!q) return 1; var h=sinTildes(x[0]+' '+x[4]+' '+x[3]+' '+x[2]), ws=h.split(' '), toks=q.split(' '), pts=0;
   for(var i=0;i<toks.length;i++){ var t=toks[i], ok=h.indexOf(t)!==-1; if(!ok && fz && t.length>=4){ for(var k=0;k<ws.length;k++){ if(casi(t,ws[k].slice(0,t.length))||casi(t,ws[k])){ ok=true; break; } } } if(!ok) return 0; pts+= sinTildes(x[0]).indexOf(t)===0 ? 3 : 1; }
   return pts; }
+
+/* ---------- silueta del ejercicio: un cuerpo con el músculo que trabaja ----------
+   No hay fotos de los 345 ejercicios (serían de otros), así que cada uno enseña
+   un muñeco nuestro con su zona marcada. Los 41 con animación llevan su figura. */
+var ZONAS = { pecho:0, hombro:0, brazo:0, antebrazo:0, espalda:0, abdomen:0, cadera:0, muslo:0, pierna:0, gemelo:0 };
+var MUS_ZONA = {
+  'Pectoral':'pecho','Pectoral superior':'pecho','Pectoral inferior':'pecho',
+  'Hombro anterior':'hombro','Hombro lateral':'hombro','Hombro posterior':'hombro','Manguito rotador':'hombro','Trapecio':'hombro',
+  'Tríceps':'brazo','Bíceps':'brazo','Braquial':'brazo','Antebrazo':'antebrazo',
+  'Dorsal':'espalda','Romboides':'espalda','Lumbar':'espalda',
+  'Abdomen':'abdomen','Oblicuos':'abdomen','Flexores de cadera':'abdomen',
+  'Glúteo':'cadera','Glúteo medio':'cadera',
+  'Cuádriceps':'muslo','Isquiotibiales':'muslo','Aductores':'muslo',
+  'Gemelos':'gemelo','Sóleo':'gemelo','Tibial anterior':'gemelo' };
+function zonasDe(mus){ var z={}; String(mus||'').split(/,\s*/).forEach(function(m){ var k=MUS_ZONA[m.trim()]; if(k) z[k]=1; }); return z; }
+function silueta(mus, tam){
+  var z=zonasDe(mus), on='var(--acc)', off='var(--text3)', t=tam||44;
+  var p=function(k){ return z[k]?on:off; }, o=function(k){ return z[k]?'1':'.34'; };
+  return '<svg viewBox="0 0 44 70" width="'+t+'" height="'+Math.round(t*70/44)+'" aria-hidden="true" style="display:block">'+
+  '<circle cx="22" cy="7" r="5" fill="'+off+'" opacity=".34"/>'+
+  /* hombros */
+  '<rect x="8" y="13" width="28" height="5" rx="2.5" fill="'+p('hombro')+'" opacity="'+o('hombro')+'"/>'+
+  /* pecho y espalda comparten el torso alto: si trabaja espalda se marca igual */
+  '<rect x="12" y="19" width="20" height="10" rx="3" fill="'+(z.pecho||z.espalda?on:off)+'" opacity="'+(z.pecho||z.espalda?'1':'.34')+'"/>'+
+  /* abdomen */
+  '<rect x="14" y="30" width="16" height="9" rx="3" fill="'+p('abdomen')+'" opacity="'+o('abdomen')+'"/>'+
+  /* brazos */
+  '<rect x="3" y="18" width="4.5" height="13" rx="2.2" fill="'+p('brazo')+'" opacity="'+o('brazo')+'"/>'+
+  '<rect x="36.5" y="18" width="4.5" height="13" rx="2.2" fill="'+p('brazo')+'" opacity="'+o('brazo')+'"/>'+
+  '<rect x="3" y="32" width="4.5" height="10" rx="2.2" fill="'+p('antebrazo')+'" opacity="'+o('antebrazo')+'"/>'+
+  '<rect x="36.5" y="32" width="4.5" height="10" rx="2.2" fill="'+p('antebrazo')+'" opacity="'+o('antebrazo')+'"/>'+
+  /* cadera */
+  '<rect x="13" y="40" width="18" height="6" rx="3" fill="'+p('cadera')+'" opacity="'+o('cadera')+'"/>'+
+  /* muslos */
+  '<rect x="13" y="47" width="7" height="13" rx="3" fill="'+p('muslo')+'" opacity="'+o('muslo')+'"/>'+
+  '<rect x="24" y="47" width="7" height="13" rx="3" fill="'+p('muslo')+'" opacity="'+o('muslo')+'"/>'+
+  /* gemelos */
+  '<rect x="14" y="61" width="5.5" height="8" rx="2.5" fill="'+p('gemelo')+'" opacity="'+o('gemelo')+'"/>'+
+  '<rect x="24.5" y="61" width="5.5" height="8" rx="2.5" fill="'+p('gemelo')+'" opacity="'+o('gemelo')+'"/>'+
+  '</svg>'; }
+
 function listaEj(){ var q=sinTildes(U.busca||''), res=[], todos=EJ.concat(D.propios.map(function(n){ return [n,'Propios','—','Propio',n,0]; }));
   var usados={}; D.entrenos.forEach(function(x){ x.ej.forEach(function(ej){ usados[ej.n]=(usados[ej.n]||0)+1; }); });
   var dnd=D.perfil&&D.perfil.donde, bonus=function(x){ if(dnd==='nada') return x[2]==='Peso corporal'?5:(x[2]==='Banda'?1:-3); if(dnd==='casa') return /Mancuernas|Peso corporal|Banda|Kettlebell/.test(x[2])?3:(/Máquina|Polea|Multipower/.test(x[2])?-2:0); return 0; };
-  [false,true].forEach(function(fz){ if(res.length) return; todos.forEach(function(x){ if(U.grupo!=='Todos' && x[1]!==U.grupo) return; var c=coincide(x,q,fz); if(c) res.push([c+(x[5]?2:0)+(usados[x[0]]?4:0)+bonus(x),x]); }); });
+  [false,true].forEach(function(fz){ if(res.length) return; todos.forEach(function(x){ if(U.grupo==='Más usados'){ if(!x[5] && !usados[x[0]]) return; } else if(U.grupo!=='Todos' && x[1]!==U.grupo) return; var c=coincide(x,q,fz); if(c) res.push([c+(x[5]?2:0)+(usados[x[0]]?4:0)+bonus(x),x]); }); });
   res.sort(function(a,b){ return b[0]-a[0] || a[1][0].localeCompare(b[1][0],'es'); });
-  var modo=U.modoEj, h='<p class="nota" style="margin:4px 0 2px">'+(res.length===1?'1 ejercicio':res.length+' ejercicios')+(U.grupo!=='Todos'?' de '+U.grupo.toLowerCase():'')+'</p>';
+  var modo=U.modoEj, h='<p class="nota" style="margin:4px 0 2px">'+(res.length===1?'1 ejercicio':res.length+' ejercicios')+(U.grupo==='Más usados'?' de los más usados':(U.grupo!=='Todos'?' de '+U.grupo.toLowerCase():''))+'</p>';
   res.slice(0,60).forEach(function(r){ var x=r[1], an=!!fichaDe(x[0]), ya = modo==='add' && D.actual && D.actual.ej.some(function(y){ return y.n===x[0]; });
     var principal = modo==='ver' ? 'verEj' : 'elegirEj';
-    h+='<div class="lrow"><button type="button" class="row" style="flex:1;min-width:0;border:none;background:none;text-align:left;padding:8px 0;gap:12px" data-a="'+principal+'" data-v="'+e(x[0])+'"><span class="thumb'+(an?' anim':'')+'" aria-hidden="true">'+(an?ic('play',20,2.4):ic('person',26,2))+'</span><span class="col" style="gap:3px;min-width:0"><strong style="font-size:15px">'+e(x[0])+'</strong><span style="font-size:13px;color:var(--text2)">'+e(x[3]||x[1])+(x[2]&&x[2]!=='—'?' · '+e(x[2]):'')+(usados[x[0]]?' · <span class="acc" style="font-weight:700">'+plural(usados[x[0]],'vez','veces')+'</span>':'')+'</span></span></button>'+
+    h+='<div class="lrow"><button type="button" class="row" style="flex:1;min-width:0;border:none;background:none;text-align:left;padding:8px 0;gap:12px" data-a="'+principal+'" data-v="'+e(x[0])+'"><span class="thumb'+(an?' anim':'')+'" aria-hidden="true">'+silueta(x[3],30)+(an?'<span class="pin">'+ic('play',11,3)+'</span>':'')+'</span><span class="col" style="gap:3px;min-width:0"><strong style="font-size:15px">'+e(x[0])+'</strong><span style="font-size:13px;color:var(--text2)">'+e(x[3]||x[1])+(x[2]&&x[2]!=='—'?' · '+e(x[2]):'')+(usados[x[0]]?' · <span class="acc" style="font-weight:700">'+plural(usados[x[0]],'vez','veces')+'</span>':(x[5]?' · <span style="color:var(--text3)">de los más usados</span>':''))+'</span></span></button>'+
       (modo==='ver' ? '' : (ya ? '<span class="lbl acc" style="padding:0 6px">Ya está</span>' : '<button type="button" class="sq" aria-label="Añadir '+e(x[0])+'" data-a="elegirEj" data-v="'+e(x[0])+'">'+ic('plus',18,2.6)+'</button>'))+'</div>'; });
   if(res.length>60) h+='<p class="nota c" style="padding:10px 0">Hay más. Escribe un poco más para afinar.</p>';
   if(U.busca && U.busca.trim() && !todos.some(function(x){ return sinTildes(x[0])===q; }))
     h+='<div class="box pad col" style="gap:8px;margin-top:6px">'+(res.length?'':'<strong>No lo encuentro.</strong>')+'<p class="p2" style="font-size:14px">Créalo con ese nombre y queda guardado para la próxima.</p><button type="button" class="chip" style="border:var(--lleno);min-height:44px" data-a="crearEj">Crear «'+e(U.busca.trim())+'»</button></div>';
   return h; }
 V.ejercicios = function(){ var f='';
-  ['Todos','Piernas','Glúteos','Pecho','Espalda','Hombros','Brazos','Core','Cardio','Cuerpo entero'].concat(D.propios.length?['Propios']:[]).forEach(function(x){ var on=U.grupo===x; f+='<button type="button" class="chip'+(on?' on':'')+'" aria-pressed="'+on+'" data-a="grupoEj" data-v="'+x+'">'+x+'</button>'; });
+  ['Todos','Más usados','Piernas','Glúteos','Pecho','Espalda','Hombros','Brazos','Core','Cardio','Cuerpo entero'].concat(D.propios.length?['Propios']:[]).forEach(function(x){ var on=U.grupo===x; f+='<button type="button" class="chip'+(on?' on':'')+'" aria-pressed="'+on+'" data-a="grupoEj" data-v="'+x+'">'+x+'</button>'; });
   var tit = U.modoEj==='add' ? 'Añadir ejercicio' : (U.modoEj==='rutina' ? 'Añadir a la rutina' : 'Ejercicios');
   return head(tit)+
   '<div class="box row" style="min-height:48px;padding:0 14px"><span style="color:var(--text3)">'+ic('search',18)+'</span><input id="in-buscar" type="search" autocomplete="off" aria-label="Buscar ejercicio" placeholder="Buscar: banca, sentadilla, curl…" value="'+e(U.busca||'')+'" data-in="busca" style="flex:1;min-width:0;height:44px;border:none;background:transparent;color:var(--text);font:inherit;font-size:16px"></div>'+
@@ -1058,7 +1099,11 @@ V.ejercicio = function(){ var n=U.ejSel, k=fichaDe(n), F=k?FICHAS[k]:null, x=inf
     F.p.forEach(function(m){ mus+='<span class="mus p">'+m+'</span>'; }); F.s.forEach(function(m){ mus+='<span class="mus s">'+m+'</span>'; });
     h+='<figure class="fig-ej'+(FIG_ALTAS.indexOf(k)!==-1?' alta':'')+(U.pausa?' pausa':'')+'"><div class="fig-svg">'+FIG[k][vi[0]]+'</div>'+(seg?'<div class="fv-wrap">'+seg+'</div>':'')+'<button type="button" class="fig-play" data-a="pausa" aria-label="'+(U.pausa?'Seguir la animación':'Parar la animación')+'">'+(U.pausa?ic('play',16,2.4):ic('pausa',16,3))+'</button><span class="fig-tempo">'+F.tempo+'</span><div class="fig-ley" aria-hidden="true"><span><i class="lp"></i>Principales</span><span><i class="ls"></i>Secundarios</span></div></figure>'+
       '<div class="sec"><span class="lbl">Músculos</span><div class="chips">'+mus+'</div></div>'; }
-  else if(x[3]) h+='<p class="p2">'+e(x[3])+(x[2]&&x[2]!=='—'?' · '+e(x[2]):'')+'</p>';
+  else h+='<div class="box pad row" style="gap:16px;align-items:center">'+
+      '<span style="flex:0 0 auto">'+silueta(x[3],74)+'</span>'+
+      '<span class="col" style="gap:6px;min-width:0"><span class="lbl">Qué trabaja</span><strong style="font-size:15px">'+e(x[3]||x[1])+'</strong>'+
+      (x[2]&&x[2]!=='—'?'<span style="font-size:13px;color:var(--text2)">'+e(x[2])+'</span>':'')+
+      '<span style="font-size:12.5px;color:var(--text3)">Este todavía no tiene animación.</span></span></div>';
   if(ses.length){ var ult=ses[0], hist='';
     ses.slice(0,6).forEach(function(s){ hist+='<div class="row sb" style="min-height:44px;border-bottom:var(--fina);gap:10px"><span style="font-size:14px;font-weight:700;white-space:nowrap">'+fechaCorta(s.fecha)+'</span><span style="font-size:13px;color:var(--text2);text-align:right">'+s.s.map(function(p){ return (p[2]?'C ':'')+(p[0]?kg(p[0])+'×':'')+p[1]; }).join(' · ')+'</span></div>'; });
     h+=graficaEj(n, ses)+'<div class="sec"><span class="lbl">Tú con este ejercicio</span><section class="score s" aria-label="Tu historial"><div><span class="lbl">Veces</span><span class="num">'+ses.length+'</span></div><div><span class="lbl">Mejor serie</span><span class="num">'+(b[0]?kg(b[0])+'×'+b[1]:b[1])+'</span></div><div><span class="lbl">La próxima</span><span class="num acc">'+(b[0]?kg(b[0])+'×'+(b[1]+1):(b[1]+1))+'</span></div></section><p class="p2" style="font-size:14px">Tu 1%: una repetición más que tu mejor serie, o los mismos kilos con mejor técnica.</p><div class="col" style="gap:0">'+hist+'</div></div>'; }
