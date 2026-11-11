@@ -1425,6 +1425,43 @@ async function tarjeta(o){ await fuentesListas(); var W=1080, H=1920, c=document
   x.fillStyle='rgba(255,255,255,.12)'; x.fillRect(80,H-250,W-160,2);
   x.fillStyle='#A6AAB2'; x.font='700 28px Inter, sans-serif'; x.textAlign='right'; x.fillText('App 1% · un 1% mejor cada día', W-80, H-40); x.textAlign='left';
   return new Promise(function(res){ c.toBlob(function(b){ res(b); }, 'image/png'); }); }
+/* Tarjeta del entreno, estilo A (foto a sangre). fmt 'ig' = stories 1080×1920; 'wa' = WhatsApp 1080×1080 */
+function datosEntreno(){ var xx=D.entrenos.filter(function(y){ return y.id===U.ultimo; })[0]; if(!xx) return null; var v=volumen(xx.ej), r=(xx.rec||[])[0];
+  return {fecha:fechaLarga(xx.fecha), foto:FOTOS[xx.id], rutina:xx.nombre, tiempo:dur(xx.fin-xx.ini), series:String(v.n), kg:num(v.v)+' kg', rec: r ? ('Récord · '+r.n+' '+(r.kg?kg(r.kg)+' × '+r.reps:r.reps+' reps')) : ''}; }
+function pastilla(x, t, px, py, alto, acc){ x.font='800 '+Math.round(alto*.44)+'px Inter, sans-serif'; var w=x.measureText(t).width+alto*.9;
+  x.fillStyle=acc; x.beginPath(); if(x.roundRect) x.roundRect(px, py-alto, w, alto, alto/2); else x.rect(px, py-alto, w, alto); x.fill();
+  x.fillStyle=textoAcc(); x.textBaseline='middle'; x.fillText(t, px+alto*.45, py-alto/2+2); x.textBaseline='alphabetic'; return w; }
+async function tarjetaEntreno(d, fmt){ await fuentesListas(); var W=1080, H=fmt==='wa'?1080:1920, M=fmt==='wa'?72:88, c=document.createElement('canvas'); c.width=W; c.height=H; var x=c.getContext('2d'), acc=colorAcc(), fam='Anton, Impact, sans-serif';
+  x.fillStyle='#101113'; x.fillRect(0,0,W,H);
+  var im=d.foto?await cargarImg(d.foto):null;
+  if(im){ var k=Math.max(W/im.width,H/im.height), w=im.width*k, h=im.height*k; x.drawImage(im,(W-w)/2,(H-h)/2,w,h);
+    var g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(10,11,12,.5)'); g.addColorStop(.22,'rgba(10,11,12,0)'); g.addColorStop(.48,'rgba(10,11,12,.12)'); g.addColorStop(fmt==='wa'?.7:.78,'rgba(10,11,12,.9)'); g.addColorStop(1,'#0A0B0C'); x.fillStyle=g; x.fillRect(0,0,W,H); }
+  else { var r=x.createRadialGradient(W*.2,H*.12,40,W*.2,H*.12,H*.8); r.addColorStop(0,acc+'48'); r.addColorStop(1,'rgba(16,17,19,0)'); x.fillStyle=r; x.fillRect(0,0,W,H); }
+  /* arriba: (logo en WhatsApp) + tu foto y tu nombre + fecha */
+  var ty=fmt==='wa'?M+40:M+70, ax=M;
+  if(fmt==='wa'){ x.fillStyle=acc; x.beginPath(); if(x.roundRect) x.roundRect(M,ty-62,124,124,28); else x.rect(M,ty-62,124,124); x.fill(); x.fillStyle=textoAcc(); x.font='64px '+fam; x.textAlign='center'; x.textBaseline='middle'; x.fillText('1%',M+62,ty+2); x.textAlign='left'; x.textBaseline='alphabetic'; ax=M+150; }
+  var nom=(D.perfil&&D.perfil.nombre)||'', av=FOTOS.perfil?await cargarImg(FOTOS.perfil):null, R=34;
+  if(av){ x.save(); x.beginPath(); x.arc(ax+R, ty, R, 0, Math.PI*2); x.clip(); x.drawImage(av, ax, ty-R, R*2, R*2); x.restore(); x.strokeStyle=acc; x.lineWidth=5; x.beginPath(); x.arc(ax+R, ty, R+1, 0, Math.PI*2); x.stroke(); ax+=R*2+20; }
+  x.fillStyle='#F2F2EE'; x.font='800 40px Inter, sans-serif'; x.textBaseline='middle'; if(nom) x.fillText(nom.slice(0,16), ax, ty+2);
+  x.fillStyle='#C9CCD2'; x.font='800 30px Inter, sans-serif'; x.textAlign='right'; x.fillText(d.fecha.toUpperCase(), W-M, ty+2); x.textAlign='left'; x.textBaseline='alphabetic';
+  /* abajo, de abajo arriba: marca, cifras, rutina y récord */
+  var y=H-M;
+  if(fmt==='ig'){ x.fillStyle='#A6AAB2'; x.font='700 30px Inter, sans-serif'; x.fillText('1% · un 1% mejor cada día', M, y); y-=96; }
+  var st = fmt==='wa' ? [['Tiempo',d.tiempo],['Series',d.series],['Movidos',d.kg]] : [['Tiempo',d.tiempo],['Movidos',d.kg]], nsz=fmt==='wa'?92:118, cw=(W-2*M)/st.length;
+  st.forEach(function(a,i){ x.fillStyle='#A6AAB2'; x.font='800 '+(fmt==='wa'?28:32)+'px Inter, sans-serif'; x.fillText(a[0].toUpperCase(), M+i*cw, y);
+    x.fillStyle=i===st.length-1?acc:'#F2F2EE'; var sz=ajustarTexto(x, a[1].toUpperCase(), cw-24, nsz, fam); x.font=sz+'px '+fam; x.fillText(a[1].toUpperCase(), M+i*cw, y-(fmt==='wa'?46:52)); });
+  y-=(fmt==='wa'?46:52)+nsz+28;
+  var tsz=ajustarTexto(x, d.rutina.toUpperCase(), W-2*M, fmt==='wa'?168:220, fam); x.fillStyle='#F2F2EE'; x.font=tsz+'px '+fam; x.fillText(d.rutina.toUpperCase(), M, y); y-=tsz*.98;
+  if(d.rec){ var t=d.rec.toUpperCase(), alto=fmt==='wa'?62:72; x.font='800 '+Math.round(alto*.44)+'px Inter, sans-serif'; while(x.measureText(t).width>W-2*M-alto && t.length>12) t=t.slice(0,-2); pastilla(x, t, M, y, alto, acc); }
+  return new Promise(function(res){ c.toBlob(function(b){ res(b); }, 'image/png'); }); }
+async function compartirEntreno(){ var d=datosEntreno(); if(!d){ toast('No hay nada que compartir todavía.'); return; }
+  U.sheet={tipo:'compEnt', anim:true, ig:null, wa:null}; render(); if(U.sheet) U.sheet.anim=false;
+  var bi=await tarjetaEntreno(d,'ig'), bw=await tarjetaEntreno(d,'wa'); if(!U.sheet || U.sheet.tipo!=='compEnt') return;
+  U.sheet.bi=bi; U.sheet.bw=bw; U.sheet.ig=URL.createObjectURL(bi); U.sheet.wa=URL.createObjectURL(bw); render(); }
+async function compartirBlob(blob, nombre){ var file; try{ file=new File([blob],nombre,{type:'image/png'}); }catch(err){ file=null; }
+  if(file && navigator.canShare && navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file]}); return; }catch(err){ if(err && err.name==='AbortError') return; } }
+  if(EN_CLAUDE){ try{ var dl=await window.claude.use('downloads'); if(dl){ await dl.save({filename:nombre, data:blob}); toast('Tarjeta guardada.'); return; } }catch(err){ if(err && err.code==='declined') return; } }
+  U.sheet={tipo:'imagen', url:URL.createObjectURL(blob), anim:true}; render(); }
 function datosTarjeta(tipo){ var p=D.perfil;
   if(tipo==='entreno'){ var xx=D.entrenos.filter(function(y){ return y.id===U.ultimo; })[0]; if(!xx) return null; var v=volumen(xx.ej), r=(xx.rec||[])[0];
     return {fecha:fechaLarga(xx.fecha), foto:FOTOS[xx.id], eyebrow: r?'Récord · '+r.n:'Entreno hecho', titulo:xx.nombre, sub: r ? (r.kg?kg(r.kg)+' kg × '+r.reps:r.reps+' repeticiones')+'. Mejor que nunca.' : plural(v.n,'serie','series')+' y todo apuntado.', stats:[['Tiempo',dur(xx.fin-xx.ini)],['Volumen',num(v.v)+' kg'],['Récords',String((xx.rec||[]).length)]]}; }
@@ -1995,6 +2032,9 @@ function sheetHTML(){ var s=U.sheet; if(!s) return ''; var h='';
     case 'cerrado': return cerradoHTML();
     case 'ganas': return ganasHTML();
     case 'medalla': h=medallaHoja(s.id); break;
+    case 'compEnt': var prev=function(u,fmt){ return u?'<img src="'+u+'" alt="" style="width:100%;display:block;border-radius:12px;border:var(--fina)">':'<div style="aspect-ratio:'+(fmt==='wa'?'1/1':'9/16')+';border-radius:12px;background:var(--caja2)"></div>'; };
+      h=hoja('Compartir','Tu entreno', '<div class="grid2" style="align-items:end"><button type="button" class="col" style="gap:8px;border:none;background:none;padding:0;text-align:left" data-a="compartirFmt" data-v="ig" aria-label="Compartir para Instagram">'+prev(s.ig,'ig')+'<strong style="font-size:15px">Instagram</strong><span style="font-size:13px;color:var(--text2);margin-top:-6px">Stories, vertical</span></button><button type="button" class="col" style="gap:8px;border:none;background:none;padding:0;text-align:left" data-a="compartirFmt" data-v="wa" aria-label="Compartir para WhatsApp">'+prev(s.wa,'wa')+'<strong style="font-size:15px">WhatsApp</strong><span style="font-size:13px;color:var(--text2);margin-top:-6px">Cuadrada, para chats</span></button></div>'+
+        (s.ig?'':'<p class="nota">Preparando tus tarjetas…</p>')+'<p class="nota">Toca la que quieras para compartirla. Solo salen tu rutina, el tiempo, las series, los kilos y el récord si lo hay.</p>'); break;
     case 'imagen': h=hoja('Tu tarjeta','Guárdala y compártela', '<img class="share-img" src="'+s.url+'" alt="Tu tarjeta para compartir"><p class="nota">Mantén pulsada la imagen y toca «Guardar en Fotos». Luego súbela a tus stories o mándala por WhatsApp.</p>'); break;
     case 'recordatorio': h=hoja('Recordatorio','¿A qué hora te aviso?', '<p class="p2">Lo añado a tu calendario del iPhone: te avisará cada día a esa hora para cerrar el día.</p><div class="grid3">'+['21:00','22:00','23:00'].map(function(x){ return opt('<span class="num" style="font-size:22px">'+x+'</span>', s.hora===x,'recHora',x,'c'); }).join('')+'</div><div class="hora"><label class="lbl" for="in-rec" style="flex:1">U otra hora</label><input id="in-rec" type="time" value="'+e(s.hora)+'" data-in="sh.hora"></div>', cta('AÑADIR AL CALENDARIO','crearRec','',ic('check'))); break;
     case 'instalar': h=hoja('Instalar','Tenla como una app', '<div class="col" style="gap:12px"><div class="row" style="gap:12px;align-items:flex-start"><span class="num acc" style="font-size:26px;width:24px">1</span><span style="font-size:15px;line-height:1.4">Abre '+(APP_URL?'<strong>'+e(APP_URL.replace(/^https?:\/\//,''))+'</strong>':'esta página')+' en <strong>Safari</strong>.</span></div><div class="row" style="gap:12px;align-items:flex-start"><span class="num acc" style="font-size:26px;width:24px">2</span><span style="font-size:15px;line-height:1.4">Toca el botón <strong>Compartir</strong> (el cuadrado con la flecha).</span></div><div class="row" style="gap:12px;align-items:flex-start"><span class="num acc" style="font-size:26px;width:24px">3</span><span style="font-size:15px;line-height:1.4">Elige <strong>Añadir a pantalla de inicio</strong>.</span></div></div>'+
@@ -2245,7 +2285,8 @@ function act(a,v,el){
     case 'discosSheet': var ej3=A.ej[+v], sx=ej3.s.filter(function(z){ return !z.ok; })[0]||ej3.s[ej3.s.length-1]; U.sheet={tipo:'discos', anim:true, kg:(sx&&sx.kg)||60, barra:20}; render(); break;
     case 'discoKg': U.sheet.kg=Math.max(0,(U.sheet.kg||0)+(+v)); U.sheet.anim=false; render(); break;
     case 'discoBarra': U.sheet.barra=+v; U.sheet.anim=false; render(); break;
-    case 'compartir': compartir(v); break;
+    case 'compartir': if(v==='entreno') compartirEntreno(); else compartir(v); break;
+    case 'compartirFmt': var sb=U.sheet&&(v==='wa'?U.sheet.bw:U.sheet.bi); if(sb) compartirBlob(sb, 'app1-entreno-'+(v==='wa'?'whatsapp':'stories')+'.png'); break;
     case 'recordatorioSheet': U.sheet={tipo:'recordatorio', anim:true, hora:(p.recordatorio||'22:00')}; render(); break;
     case 'recHora': U.sheet.hora=v; U.sheet.anim=false; render(); break;
     case 'crearRec': crearRecordatorio(U.sheet.hora||'22:00'); break;
