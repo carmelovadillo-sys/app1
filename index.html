@@ -777,6 +777,12 @@ input,textarea,select{font-size:16px}
 .screen{padding-top:calc(var(--it) + 20px)}
 .tabbar{bottom:max(10px,var(--ib))}
 .barra-cta{bottom:calc(max(10px,var(--ib)) + 74px)}
+/* instalada en un iPhone con rayita de inicio: suelo de seguridad, pase lo que
+   pase con lo que iOS diga del borde de abajo. La burbuja nunca se corta. */
+html.inst .tabbar{bottom:max(var(--ibMin,10px),var(--ib))}
+html.inst .barra-cta{bottom:calc(max(var(--ibMin,10px),var(--ib)) + 74px)}
+html.inst .app:not(.notab) .screen{padding-bottom:calc(max(var(--ibMin,10px),var(--ib)) + 104px)}
+html.inst .app.conbarra .screen{padding-bottom:calc(max(var(--ibMin,10px),var(--ib)) + 172px)}
 .app:not(.notab) .screen{padding-bottom:calc(var(--ib) + 104px)}
 .app.conbarra .screen{padding-bottom:calc(var(--ib) + 172px)}
 .app.condesc .screen{padding-bottom:calc(var(--ib) + 176px)}
@@ -792,10 +798,12 @@ input,textarea,select{font-size:16px}
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=b22d49e4"></script><script src="banco.js?v=b22d49e4"></script><script src="app.js?v=b22d49e4"></script>
+<script src="datos.js?v=37bdbfb0"></script><script src="banco.js?v=37bdbfb0"></script><script src="app.js?v=37bdbfb0"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');
+  /* iPhone sin botón de inicio: siempre 24 px libres bajo la burbuja */
+  if(Math.max(screen.width,screen.height)>=800) r.style.setProperty('--ibMin','24px');
   /* iPhone 12 Pro (y 12, 13, 13 Pro, 14: misma pantalla): 390 × 844, muesca de 47 px arriba y rayita de inicio de 34 px abajo. Medidas fijas, sin fiarse de lo que diga iOS. */
   var W=Math.min(screen.width,screen.height), H=Math.max(screen.width,screen.height);
   if(W===390 && H===844){ var fija=function(){ var vert=window.innerHeight>=window.innerWidth; r.style.setProperty('--alto', (vert?844:390)+'px'); r.style.setProperty('--itExtra', vert?'47px':'0px'); r.style.setProperty('--ibExtra', vert?'34px':'21px'); };
