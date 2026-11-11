@@ -584,17 +584,34 @@ input[type=file]{font-size:0}
 
 /* ===== Cristal: fondo vivo detrás y piezas esmeriladas encima ===== */
 .app{isolation:isolate;overflow:clip}
+/* el aura entra por la izquierda y cambia de color con la hora del día */
+.app{--au2:#5B8CFF;--au3:#B45BFF;--auF:38%;--auG:30%}
+.app[data-franja="manana"]{--au2:#FFA42B;--au3:#EC407A;--auF:44%;--auG:30%}
+.app[data-franja="mediodia"]{--au2:#FFC857;--au3:#4FD1A5;--auF:38%;--auG:26%}
+.app[data-franja="tarde"]{--au2:#6D5CFF;--au3:#29B6F6;--auF:46%;--auG:34%}
+.app[data-franja="noche"]{--au2:#3E4AA8;--au3:#1A7C7A;--auF:34%;--auG:24%}
 .app::before{content:"";position:absolute;inset:-25%;z-index:0;pointer-events:none;
+  transition:background 1.6s linear;
   background:
-    radial-gradient(26% 24% at 96% 12%, color-mix(in srgb,var(--acc) 46%,transparent), transparent 70%),
-    radial-gradient(24% 26% at 100% 44%, color-mix(in srgb,#5B8CFF 38%,transparent), transparent 70%),
-    radial-gradient(26% 26% at 96% 78%, color-mix(in srgb,#B45BFF 30%,transparent), transparent 70%),
-    radial-gradient(20% 20% at 90% 96%, color-mix(in srgb,var(--acc) 16%,transparent), transparent 70%);
+    radial-gradient(28% 26% at 4% 14%, color-mix(in srgb,var(--acc) 42%,transparent), transparent 70%),
+    radial-gradient(26% 28% at 0% 46%, color-mix(in srgb,var(--au2) var(--auF),transparent), transparent 70%),
+    radial-gradient(28% 28% at 4% 80%, color-mix(in srgb,var(--au3) var(--auG),transparent), transparent 70%),
+    radial-gradient(20% 20% at 10% 98%, color-mix(in srgb,var(--acc) 14%,transparent), transparent 70%);
   filter:blur(30px);animation:aurora 26s ease-in-out infinite alternate;will-change:transform}
+/* punto "en directo" */
+.live{position:relative;width:8px;height:8px;flex:0 0 auto;display:inline-block}
+.live::before,.live::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--acc)}
+.live::before{animation:latido 2.2s ease-out infinite}
+@keyframes latido{0%{transform:scale(1);opacity:.6}70%{transform:scale(2.6);opacity:0}100%{transform:scale(2.6);opacity:0}}
+@media (prefers-reduced-motion: reduce){ .live::before{animation:none;opacity:.3} }
 @keyframes aurora{0%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(1.5%,-3%,0) scale(1.05)}100%{transform:translate3d(.5%,3%,0) scale(1.02)}}
 .app .screen{position:relative;z-index:1;background:transparent}
-.box{background:color-mix(in srgb,var(--caja) 64%,transparent);box-shadow:inset 0 1px 0 var(--brillo),0 6px 22px rgba(0,0,0,.10)}
-.app[data-tema="claro"] .box{background:color-mix(in srgb,var(--caja) 70%,transparent)}
+.box{background:color-mix(in srgb,var(--caja) 52%,transparent);-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%);box-shadow:inset 0 1px 0 var(--brillo),0 6px 22px rgba(0,0,0,.10)}
+.app[data-tema="claro"] .box{background:color-mix(in srgb,var(--caja) 64%,transparent)}
+.fila{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.h1.frase{font-size:30px;line-height:1.08;text-transform:none;letter-spacing:0;text-wrap:balance}
+.estado{display:block;margin-top:8px;font-size:14px;color:var(--text2);line-height:1.45}
+.estado b{color:var(--text);font-weight:600}
 /* barra de abajo: borde de luz arriba-izquierda */
 .tabbar::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;
   background:linear-gradient(135deg,rgba(255,255,255,.55),rgba(255,255,255,.08) 40%,rgba(255,255,255,0) 60%,rgba(255,255,255,.18));
@@ -607,7 +624,7 @@ input[type=file]{font-size:0}
 .toast{-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
 @media (prefers-reduced-motion: reduce){ .app::before{animation:none} }
 @media (prefers-reduced-transparency: reduce){
-  .app::before{display:none} .box{background:var(--caja)} .sheet{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none} .overlay{background:rgba(10,11,12,.8)} }
+  .app::before{display:none} .box{background:var(--caja);-webkit-backdrop-filter:none;backdrop-filter:none} .fila{-webkit-backdrop-filter:none;backdrop-filter:none} .sheet{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none} .overlay{background:rgba(10,11,12,.8)} }
 @supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){ .sheet{background:var(--bg)} }
 
 /* =========================================================
@@ -768,7 +785,7 @@ input,textarea,select{font-size:16px}
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=1129cf49"></script><script src="banco.js?v=1129cf49"></script><script src="app.js?v=1129cf49"></script>
+<script src="datos.js?v=785d3ebd"></script><script src="banco.js?v=785d3ebd"></script><script src="app.js?v=785d3ebd"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');

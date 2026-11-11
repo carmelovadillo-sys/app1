@@ -555,7 +555,8 @@ V.hoy = function(){ var f=hoy(), p=D.perfil, d=D.dias[f]||{h:{}}, ts=tareas(f), 
   if(descansoGym) filas+='<button type="button" class="fila" data-a="'+(D.actual?'go':'tab')+'" data-v="'+(D.actual?'entreno':'gym')+'" style="opacity:.85"><span class="bx" aria-hidden="true" style="border-style:dashed"></span><span class="col" style="gap:2px;flex:1"><span class="lbl">GYM</span><strong style="font-size:15px">'+(entrenoEl(f)?'Entreno extra hecho':(D.actual?'Entreno en curso':'Hoy no toca gym'))+'</strong><span style="font-size:13px;color:var(--text2)">'+(entrenoEl(f)?'Suma en tu semana de gym':(D.actual?'Al terminarlo, suma en tu semana de gym':'Descansar también es parte del plan. No cuenta como fallo.'))+'</span></span></button>';
   retosActivos().forEach(function(r){ filas+=filaReto(r,f); });
   var todo = ts.length>0 && n===ts.length, falta=ts.length-n, c=cumplidosHasta(f);
-  var titular = d.dificil ? 'Hoy, lo <span class="hl nw">mínimo.</span>' : (d.cerrado ? 'Día <span class="hl nw">cerrado.</span>' : (todo ? 'Todo <span class="hl nw">hecho.</span>' : (ts.length===0 ? 'Hoy <span class="hl nw">descansas.</span>' : (diaN(f)===1 && n===0 ? 'Hoy <span class="hl nw">empiezas.</span>' : (falta===1 ? 'Te falta <span class="hl nw">una.</span>' : 'A por <span class="hl nw">hoy.</span>')))));
+  var estado = d.dificil ? 'Hoy, lo mínimo.' : (d.cerrado ? 'Día cerrado.' : (todo ? 'Todo hecho.' : (ts.length===0 ? 'Hoy descansas.' : (diaN(f)===1 && n===0 ? 'Hoy empiezas.' : (falta===1 ? 'Te falta una.' : 'Te faltan '+falta+'.')))));
+  var dr = datoReal(f);
   var pie = ts.length===0 ? 'Hoy no tienes nada que cumplir. Tu curva se queda en +'+pct(c)+' %.' : (todo ? 'Tu 1% de hoy está hecho. Curva: +'+pct(c)+' %.' : 'Cumple todo y tu curva sube a +'+pct(c+1)+' %. Si no, se queda igual.');
   var ultimo = D.chat.length ? D.chat[D.chat.length-1].m : '';
   var ayer=sumar(f,-1), dAyer=D.dias[ayer], ayerSinCerrar = ayer>=inicio() && !(dAyer && dAyer.cerrado);
@@ -564,12 +565,13 @@ V.hoy = function(){ var f=hoy(), p=D.perfil, d=D.dias[f]||{h:{}}, ts=tareas(f), 
   var nv=nivelDe(c);
   var instalar = (!esInstalada() && !D.vistos.instalar && diaN(f)>=1 && (APP_URL || !EN_CLAUDE)) ? '<div class="box col" style="padding:12px 14px;gap:8px"><div class="row sb"><strong style="font-size:15px">Tenla como una app</strong><button type="button" class="link" style="min-height:32px;padding:0" data-a="cerrarInstalar">Cerrar</button></div><span style="font-size:13px;color:var(--text2)">Con su icono, a pantalla completa y sin internet en el gym.</span><button type="button" class="chip" style="border:var(--lleno)" data-a="instalarSheet">Cómo instalarla</button></div>' : '';
   return sinTest+instalar+(sinGuardar?'<div class="box pad" style="border:2px solid #D93A40"><strong>Este navegador no deja guardar.</strong><p class="p2" style="font-size:14px">Puede que estés en una ventana privada. Ábrela en una normal o tus datos se perderán al cerrarla.</p></div>':'')+'<div class="row sb"><span class="lbl">'+fechaLarga(f)+' · día '+diaN(f)+'</span><span class="row" style="gap:8px"><button type="button" class="nivel-chip" data-a="go" data-v="medallas" aria-label="Nivel '+nv.i+': '+nv.n+'. Ver medallas">'+ic('retos',14,2.4)+'<span>'+nv.n+'</span></button><button type="button" class="ayuda" data-a="guia" aria-label="Cómo funciona">?</button><button type="button" class="avatar" data-a="go" data-v="ajustes" aria-label="Tu perfil y ajustes">'+avatarIn()+'</button></span></div>'+
-  '<h1 class="h1" style="margin-top:-6px">'+titular+'</h1>'+
+  '<h1 class="h1 frase" style="margin-top:2px">'+e(msgDelDia())+'</h1>'+
+  '<span class="estado"><b>'+e(estado)+'</b>'+(dr?' '+e(dr):'')+'</span>'+
   wrapCard(f)+compromisoCard(f)+
   pitidoCard()+
   (partidoOn() ? matchMini() : '')+
   '<section class="box col hoy-box'+(todo?' todo':'')+'" style="padding:12px 14px 0;gap:8px" aria-label="Lo de hoy">'+
-  '<div class="row" style="gap:14px">'+anillo(n,ts.length)+'<span class="col" style="gap:2px;flex:1;min-width:0"><span class="lbl" style="color:var(--text)">Lo de hoy · tu 1%</span><span style="font-size:13px;color:var(--text2)">'+(todo?'Hecho. Curva +'+pct(c)+' %':(ts.length?'Te '+(falta===1?'falta 1':'faltan '+falta)+' para subir al +'+pct(c+1)+' %':'Hoy, descanso'))+'</span></span><span class="col" style="align-items:flex-end;gap:0"><span class="num acc" style="font-size:26px">+'+pct(c)+'%</span><span class="lbl">Curva</span></span></div>'+
+  '<div class="row" style="gap:14px">'+anillo(n,ts.length)+'<span class="col" style="gap:2px;flex:1;min-width:0"><span class="row" style="gap:8px"><span class="live" aria-hidden="true"></span><span class="lbl" style="color:var(--text)">Lo de hoy · tu 1%</span></span><span style="font-size:13px;color:var(--text2)">'+(todo?'Hecho. Curva +'+pct(c)+' %':(ts.length?'Te '+(falta===1?'falta 1':'faltan '+falta)+' para subir al +'+pct(c+1)+' %':'Hoy, descanso'))+'</span></span><span class="col" style="align-items:flex-end;gap:0"><span class="num acc" style="font-size:26px">+'+pct(c)+'%</span><span class="lbl">Curva</span></span></div>'+
   filas+'<p style="margin:0;padding:10px 0 12px;border-top:var(--fina);font-size:13px;color:var(--text2)">'+pie+'</p></section>'+
   dejarCard()+
   (!retosActivos().length ? '<button type="button" class="box row sb" style="padding:12px 14px;text-align:left;width:100%" data-a="tab" data-v="retos"><span class="row" style="gap:12px"><span class="thumb" aria-hidden="true">'+ic('retos',24,2.2)+'</span><span class="col" style="gap:2px"><strong style="font-size:15px">Empieza un reto</strong><span style="font-size:13px;color:var(--text2)">Cortos, de 5 a 30 días, con margen</span></span></span><span style="color:var(--text3)">'+ic('chev',18)+'</span></button>' : '')+
@@ -2102,6 +2104,9 @@ var TEST = ['bienvenida','plan'].concat(Object.keys(PREG));
 var TAB_DE = {hoy:'hoy',partido:'hoy',cierre:'hoy',ajustes:'hoy',atajoPasos:'progreso',pasosHist:'progreso',ajChungo:'hoy',ajCuerpo:'hoy',ajAreas:'hoy',ajGym:'hoy',ajPasos:'hoy',ajMovil:'hoy',ajDejar:'hoy',ajNombre:'hoy',ajTono:'hoy',ajAspecto:'hoy',privacidad:'hoy',
   gym:'gym',entreno:'gym',ejercicios:'gym',ejercicio:'gym',resumen:'gym',story:'gym',historial:'gym',records:'gym',rutinaEd:'gym',
   progreso:'progreso',medallas:'progreso',razones:'hoy',wrap:'hoy',retos:'retos',reto:'retos',nuevoReto:'retos', mister:'mister'};
+/* franja del día: el aura del fondo cambia de color con la hora */
+function franja(){ var h=new Date(ahora()).getHours();
+  return h<11 ? 'manana' : (h<17 ? 'mediodia' : (h<22 ? 'tarde' : 'noche')); }
 var TABS = [['hoy','HOY'],['gym','GYM'],['retos','RETOS'],['progreso','PROGRESO'],['mister','MÍSTER']];
 function tabbar(cur){ var h='<nav class="tabbar" aria-label="Secciones">'; TABS.forEach(function(t){ h+='<button type="button" class="tb" data-a="tab" data-v="'+t[0]+'"'+(cur===t[0]?' aria-current="page"':'')+'>'+ic(t[0],24,2.2)+'<span>'+t[1]+'</span></button>'; }); return h+'</nav>'; }
 var ultimaPant=null, toastT=null, toastPrev='';
@@ -2110,7 +2115,7 @@ function render(){
   var scr=document.getElementById('scr'), keep=(ultimaPant===U.pantalla && scr) ? scr.scrollTop : 0;
   var enTest = TEST.indexOf(U.pantalla)!==-1 || U.pantalla==='wrap', tab = enTest ? null : (TAB_DE[U.pantalla]||'hoy');
   var p=D.perfil||{tema:U.t&&U.t.tema, color:U.t&&U.t.color};
-  app.dataset.tema = p.tema||'auto'; app.dataset.color = p.color||'amarillo';
+  app.dataset.tema = p.tema||'auto'; app.dataset.color = p.color||'amarillo'; app.dataset.franja = franja();
   var barra = !enTest && barraCierre(), desc = !enTest && D.actual && D.actual.desc && !U.sheet ? descansoHTML() : '';
   app.classList.toggle('notab', enTest); app.classList.toggle('conbarra', !!barra); app.classList.toggle('condesc', !!desc);
   var vista = V[U.pantalla] ? V[U.pantalla]() : V.hoy();
