@@ -728,6 +728,29 @@ function responder(v){ var f=hoy(), yo={voy:'¿Cómo voy?',cuesta:'Hoy me cuesta
 function bajarChat(){ var s=document.getElementById('scr'); if(s) s.scrollTop=s.scrollHeight; }
 
 /* ---------- Progreso ---------- */
+/* Racha: días seguidos cerrando el día. Si hoy aún no lo has cerrado, cuenta hasta ayer. */
+function cerradoEl(f){ var d=D.dias[f]; return !!(d && d.cerrado); }
+function rachaCierre(){ var f=hoy(); if(!cerradoEl(f)) f=sumar(f,-1); var n=0; while(f>=inicio() && cerradoEl(f)){ n++; f=sumar(f,-1); } return n; }
+function mejorRachaCierre(){ var n=0, mx=0; for(var x=inicio(); x<=hoy(); x=sumar(x,1)){ if(cerradoEl(x)){ n++; if(n>mx) mx=n; } else n=0; } return mx; }
+/* El porqué del porcentaje: en qué eres mejor, con tus números. */
+function razonesMejora(f){ var p=D.perfil, L=[], ini=inicio(), tot=entre(ini,f)+1, c=cumplidosHasta(f);
+  L.push([c+'/'+tot, 'días cumpliendo tu 1%']);
+  var ent=D.entrenos.filter(function(x){ return x.fecha>=ini; }), recs=0; ent.forEach(function(x){ recs+=(x.rec||[]).length; });
+  if(ent.length) L.push([String(ent.length), plural(ent.length,'entreno','entrenos')+(recs?' y '+plural(recs,'récord','récords'):'')]);
+  if(p.areas.indexOf('dejar')!==-1 && p.dejar && p.dejar.desde){ var dd=Math.floor(diasSinDejarAhora());
+    L.push([dd+' d', dejarTxt()[1]+(eurosDia()?' · '+num(dd*eurosDia())+' € que no te has gastado':'')]); }
+  var ps=[]; for(var k in D.dias){ if(k>=ini && D.dias[k].pasos) ps.push(D.dias[k].pasos); }
+  if(ps.length>=3){ var med=Math.round(ps.reduce(function(a,b){ return a+b; },0)/ps.length), base=p.base&&p.base.pasos;
+    L.push([num(med), 'pasos al día'+(base?' · antes '+num(base):'')]); }
+  var r=rachaCierre(); if(r>=3) L.push([String(r), 'días seguidos cerrando el día']);
+  return L; }
+function mejorCard(f){ var c=cumplidosHasta(f), tot=entre(inicio(),f)+1, li='';
+  razonesMejora(f).forEach(function(x){ li+='<div class="row" style="gap:12px;align-items:baseline;padding:9px 0;border-top:var(--fina)"><span class="num acc" style="font-size:22px;min-width:64px">'+e(x[0])+'</span><span style="font-size:14px;color:var(--text2);flex:1">'+e(x[1])+'</span></div>'; });
+  return plega('mejor', 'Cuánto mejor eres', 'Desde el '+fechaCorta(inicio())+' · +'+pct(c)+' %', ic('retos',22,2.2),
+    '<div class="col" style="gap:2px"><span class="lbl">Eres un</span><span class="num acc" style="font-family:var(--display);font-size:60px;line-height:.92">+'+pct(c)+' %</span><strong style="font-size:17px">mejor que hace '+plural(tot,'día','días')+'</strong></div>'+
+    li+
+    '<p class="nota" style="margin:6px 0 0">Cada día que cumples todo subes un 1% sobre lo que ya eras. Por eso no es lo mismo cumplir 12 días sueltos que 12 seguidos.</p>'+
+    cta('COMPARTIRLO','compartir','mejora',ic('arrow'),'ghost sm'), false); }
 V.progreso = function(){ var f=hoy(), m=U.mes||f.slice(0,7), y=+m.slice(0,4), mo=+m.slice(5,7)-1, g='', c=cumplidosHasta(f);
   DIAS_C.forEach(function(x){ g+='<span class="lbl c">'+x+'</span>'; });
   var primero=m+'-01', off=dsem(primero), nd=new Date(y,mo+1,0).getDate();
@@ -752,6 +775,9 @@ V.progreso = function(){ var f=hoy(), m=U.mes||f.slice(0,7), y=+m.slice(0,4), mo
   return '<div class="row sb" style="align-items:flex-end"><span class="row" style="gap:4px"><button type="button" class="ib" style="margin-left:-12px;'+(puedePrev?'':'visibility:hidden')+'" data-a="mes" data-v="'+prevM+'" aria-label="Mes anterior">'+ic('chevL',22)+'</button><h1 class="h1 m" style="font-size:'+(MESES[mo].length>7?34:42)+'px">'+cap(MESES[mo])+'</h1>'+(puedeNext?'<button type="button" class="ib" style="margin-left:0" data-a="mes" data-v="'+nextM+'" aria-label="Mes siguiente">'+ic('chev',22)+'</button>':'')+'</span><span class="col" style="align-items:flex-end;gap:2px;flex-shrink:0"><span class="num acc" style="font-size:30px">'+c+'</span><span class="lbl">Cumplidos</span></span></div>'+
   '<section class="sec" aria-label="Calendario"><div class="grid7">'+g+'</div>'+
   '<div class="row" style="gap:14px;flex-wrap:wrap;font-size:13px;color:var(--text2)"><span class="row" style="gap:6px"><span class="sw" style="background:var(--acc)"></span>Tu 1% cumplido</span><span class="row" style="gap:6px"><span class="sw hatch" style="border:var(--fina)"></span>Descanso</span><span class="row" style="gap:6px"><span class="sw" style="border:var(--borde);background:var(--caja)"></span>No cumplido</span></div></section>'+
+  (function(){ var r=rachaCierre(), mj=mejorRachaCierre();
+    return '<div class="box row sb" style="padding:12px 14px"><span class="col" style="gap:2px"><span class="lbl">Racha · días seguidos cerrando</span><span style="font-size:13px;color:var(--text2)">'+(r===0?'Cierra el día de hoy y empieza una.':(r>=mj?'Es tu mejor racha hasta ahora.':'Tu mejor racha: '+plural(mj,'día','días')+'.'))+'</span></span><span class="num acc" style="font-size:30px">'+r+'</span></div>'; })()+
+  mejorCard(f)+
   '<div class="box col" style="padding:12px 14px;gap:6px"><div class="row sb"><span class="lbl">Tu curva del 1%</span><span class="num acc" style="font-size:24px">+'+pct(c)+' %</span></div>'+curva+'<span style="font-size:13px;color:var(--text2)">Sube un 1% cada día que cumples todo. Si un día no, se queda igual: nunca baja.</span></div>'+
   (function(){ var nn=D.medallas?Object.keys(D.medallas).length:0, nv2=nivelDe(c); return '<button type="button" class="box row sb" style="padding:12px 14px;text-align:left;width:100%" data-a="go" data-v="medallas"><span class="row" style="gap:12px">'+medallaSVG(MEDALLAS[0][0], nn>0)+'<span class="col" style="gap:2px"><span class="lbl">Nivel '+nv2.i+' · '+nv2.n+'</span><strong>'+nn+' de '+MEDALLAS.length+' medallas</strong></span></span><span style="color:var(--text3)">'+ic('chev',18)+'</span></button>'; })()+
   dinero+pistaH+pasosProgreso()+gym+
@@ -1545,6 +1571,10 @@ function datosTarjeta(tipo){ var p=D.perfil;
   if(tipo==='entreno'){ var xx=D.entrenos.filter(function(y){ return y.id===U.ultimo; })[0]; if(!xx) return null; var v=volumen(xx.ej), r=(xx.rec||[])[0];
     return {fecha:fechaLarga(xx.fecha), foto:FOTOS[xx.id], eyebrow: r?'Récord · '+r.n:'Entreno hecho', titulo:xx.nombre, sub: r ? (r.kg?kg(r.kg)+' kg × '+r.reps:r.reps+' repeticiones')+'. Mejor que nunca.' : plural(v.n,'serie','series')+' y todo apuntado.', stats:[['Tiempo',dur(xx.fin-xx.ini)],['Volumen',num(v.v)+' kg'],['Récords',String((xx.rec||[]).length)]]}; }
   if(tipo==='semana'){ var w=datosSemana(U.wrapL); return {fecha:'Semana del '+fechaCorta(U.wrapL), eyebrow:'Mi semana', grande:w.c+'/7', titulo:'días cumplidos', sub:'Mi curva va en +'+pct(w.despues)+' %.'+(w.ent?' '+plural(w.ent,'entreno','entrenos')+(w.recs?' y '+plural(w.recs,'récord','récords'):'')+'.':''), stats:[['Entrenos',String(w.ent)],['Kg movidos',num(w.kg)],['Partido',w.m[0]+'–'+w.m[1]]]}; }
+  if(tipo==='mejora'){ var fm=hoy(), cm=cumplidosHasta(fm), tt=entre(inicio(),fm)+1, L=razonesMejora(fm);
+    return {eyebrow:'Eres un', grande:'+'+pct(cm)+' %', titulo:'mejor que hace '+plural(tt,'día','días'),
+      sub: L.slice(0,3).map(function(x){ return x[0]+' '+x[1]; }).join('. ')+'.',
+      stats: L.slice(0,3).map(function(x){ return [x[1].split(' ·')[0].slice(0,18), x[0]]; })}; }
   if(tipo==='cele' && U.ultimaCele){ var o=U.ultimaCele, sh=o.share||{}; return {eyebrow: sh.eyebrow||o.eyebrow, grande: sh.gr||o.grande, titulo: sh.ej||o.titulo.replace(/[¡!]/g,''), sub: sh.marca ? 'Hoy, '+sh.marca+'.' : (o.sub||''), stats:[['Nivel',nivelDe(cumplidosHasta(hoy())).n],['Curva','+'+pct(cumplidosHasta(hoy()))+' %']]}; }
   return null; }
 async function compartir(tipo){ var d=datosTarjeta(tipo); if(!d){ toast('No hay nada que compartir todavía.'); return; }
