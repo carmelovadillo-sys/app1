@@ -604,7 +604,7 @@ V.hoy = function(){ var f=hoy(), p=D.perfil, d=D.dias[f]||{h:{}}, ts=tareas(f), 
   '<section class="box col hoy-box'+(todo?' todo':'')+'" style="padding:4px 14px 0;gap:8px" aria-label="Lo de hoy">'+
   filas+'<p style="margin:0;padding:10px 0 12px;border-top:var(--fina);font-size:13px;color:var(--text2)">'+pie+'</p></section>'+
   plega('retos','Retos', resumenRetos(f), ic('retos',22,2.2),
-    dejarCard()+retoFilas+(!retosActivos().length ? '<button type="button" class="chip" style="border:var(--lleno)" data-a="tab" data-v="retos">Empezar un reto</button>' : ''), true)+
+    dejarCard(true)+retoFilas+(!retosActivos().length ? '<button type="button" class="chip" style="border:var(--lleno)" data-a="tab" data-v="retos">Empezar un reto</button>' : ''), true)+
   plega('gym','Gym y partido', resumenGym(f), ic('gym',22,2.2),
     gymFila+(partidoOn() ? matchMini() : ''), false)+
   (ayerSinCerrar ? '<button type="button" class="box row sb" style="padding:12px 14px;text-align:left;width:100%" data-a="cerrarDia" data-v="'+ayer+'"><span class="col" style="gap:2px"><strong style="font-size:15px">Ayer se quedó sin cerrar</strong><span style="font-size:13px;color:var(--text2)">Ciérralo ahora: son 30 segundos.</span></span><span style="color:var(--text3)">'+ic('chev',18)+'</span></button>' : '')+
@@ -1448,11 +1448,11 @@ V.wrap = function(){ var l=U.wrapL, w=datosSemana(l), p=U.wrapP||0, slides=[];
 var HITOS_DEJAR=[1,3,7,14,30,60,90,180,365];
 function dejarTxt(){ var p=D.perfil; return DEJAR[(p.dejar&&p.dejar.que)||'otra']; }
 function contador(ms){ var s=Math.max(0,Math.floor(ms/1000)), d=Math.floor(s/86400), h=Math.floor((s%86400)/3600), m=Math.floor((s%3600)/60); return d+' d '+pad(h)+' h '+pad(m)+' min '+pad(s%60)+' s'; }
-function dejarCard(){ var p=D.perfil; if(!p || p.areas.indexOf('dejar')===-1 || !p.dejar) return ''; var ms=ahora()-p.dejar.desde, dd=ms/86400000, sig=HITOS_DEJAR.filter(function(x){ return x>dd; })[0], ant=HITOS_DEJAR.filter(function(x){ return x<=dd; }).pop()||0, pr= sig ? Math.round((dd-ant)/(sig-ant)*100) : 100;
+function dejarCard(mini){ var p=D.perfil; if(!p || p.areas.indexOf('dejar')===-1 || !p.dejar) return ''; var ms=ahora()-p.dejar.desde, dd=ms/86400000, sig=HITOS_DEJAR.filter(function(x){ return x>dd; })[0], ant=HITOS_DEJAR.filter(function(x){ return x<=dd; }).pop()||0, pr= sig ? Math.round((dd-ant)/(sig-ant)*100) : 100;
   var eur = eurosDia() ? num(dd*eurosDia())+' €' : '';
-  return '<section class="box col dejar-card" style="padding:14px;gap:10px" aria-label="Llevas sin '+e(dejarTxt()[2])+'"><div class="row sb"><span class="lbl acc">'+cap(dejarTxt()[1])+'</span>'+(eur?'<span class="num acc" style="font-size:22px">'+eur+'</span>':'')+'</div><span class="num" id="dejar-cnt" style="font-size:34px">'+contador(ms).toUpperCase()+'</span>'+
-    (sig?'<div class="mbar"><span class="llena" style="--w:'+pr+'%"></span></div><span style="font-size:13px;color:var(--text2)">Próximo hito: '+plural(sig,'día','días')+'.'+(p.dejar.mejor?' Tu mejor marca: '+plural(Math.floor(p.dejar.mejor),'día','días')+'.':'')+'</span>':'')+
-    '<div class="grid2"><button type="button" class="chip" style="min-height:48px;border:var(--lleno)" data-a="ganas">Tengo ganas</button><button type="button" class="chip" style="min-height:48px" data-a="caida">He caído</button></div></section>'; }
+  return '<section class="box col dejar-card'+(mini?' mini':'')+'" style="padding:'+(mini?'12px':'14px')+';gap:'+(mini?'6px':'10px')+'" aria-label="Llevas sin '+e(dejarTxt()[2])+'"><div class="row sb"><span class="lbl acc">'+cap(dejarTxt()[1])+'</span>'+(eur?'<span class="num acc" style="font-size:'+(mini?'18px':'22px')+'">'+eur+'</span>':'')+'</div><span class="num" id="dejar-cnt" style="font-size:'+(mini?'22px':'34px')+'">'+contador(ms).toUpperCase()+'</span>'+
+    (mini||!sig?'':'<div class="mbar"><span class="llena" style="--w:'+pr+'%"></span></div><span style="font-size:13px;color:var(--text2)">Próximo hito: '+plural(sig,'día','días')+'.'+(p.dejar.mejor?' Tu mejor marca: '+plural(Math.floor(p.dejar.mejor),'día','días')+'.':'')+'</span>')+
+    '<div class="grid2" style="margin-top:'+(mini?'2px':'0')+'"><button type="button" class="chip" style="min-height:'+(mini?'40px':'48px')+';border:var(--lleno)" data-a="ganas">Tengo ganas</button><button type="button" class="chip" style="min-height:'+(mini?'40px':'48px')+'" data-a="caida">He caído</button></div></section>'; }
 function revisarHitosDejar(){ var p=D.perfil; if(!p || p.areas.indexOf('dejar')===-1 || !p.dejar) return; var dd=(ahora()-p.dejar.desde)/86400000; p.dejar.hitos=p.dejar.hitos||{};
   var nuevos=HITOS_DEJAR.filter(function(x){ return dd>=x && !p.dejar.hitos[x+'@'+p.dejar.desde]; }); if(!nuevos.length) return;
   nuevos.forEach(function(x){ p.dejar.hitos[x+'@'+p.dejar.desde]=hoy(); }); guardar(); var x=nuevos.pop();
