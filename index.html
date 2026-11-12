@@ -531,6 +531,27 @@ input[type=file]{font-size:0}
 .plega-c{display:flex;flex-direction:column;gap:8px;padding:0 14px 12px;animation:plegaIn .24s var(--ease-out)}
 @keyframes plegaIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .plega-c>.box,.plega-c>.match{background:var(--off);border-radius:14px;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+/* La tarjeta grande de «cuánto mejor eres»: la misma que se comparte, siempre oscura */
+.s1{position:relative;overflow:hidden;border-radius:22px;background:#0B0C0F;color:#F4F5F7;padding:24px 22px;min-height:560px;display:flex;flex-direction:column}
+.s1::before,.s1::after{content:"";position:absolute;border-radius:50%;pointer-events:none;filter:blur(50px)}
+.s1::before{top:-90px;left:-110px;width:380px;height:380px;background:radial-gradient(circle,color-mix(in srgb,var(--fd) 30%,transparent) 0%,transparent 70%)}
+.s1::after{bottom:-130px;right:-110px;width:330px;height:330px;background:radial-gradient(circle,color-mix(in srgb,var(--fd) 18%,transparent) 0%,transparent 70%)}
+.s1>*{position:relative}
+.s1-top{display:flex;align-items:center;gap:9px}
+.s1-logo{width:30px;height:30px;border-radius:9px;background:var(--fd);color:var(--od);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:15px}
+.s1-marca{font-size:12px;letter-spacing:.16em;font-weight:600;color:#9FA5AD}
+.s1-fecha{margin-left:auto;font-size:12px;color:#6E747D}
+.s1-mid{margin-top:34px}
+.s1-ey{display:block;font-size:12px;letter-spacing:.16em;font-weight:600;color:#9FA5AD}
+.s1-gr{display:block;font-family:var(--display);font-size:112px;line-height:.84;color:var(--td);margin-top:8px}
+.s1-sub{display:block;font-family:var(--display);font-size:32px;line-height:1.04;margin-top:10px}
+.s1-bot{margin-top:auto;padding-top:26px}
+.s1-r{display:flex;align-items:baseline;gap:12px;padding:10px 0;border-top:1px solid rgba(255,255,255,.12)}
+.s1-r:last-of-type{border-bottom:1px solid rgba(255,255,255,.12)}
+.s1-n{font-family:var(--display);font-size:25px;color:var(--td);min-width:64px;flex-shrink:0}
+.s1-t{font-size:14px;color:#D5D9DF}
+.s1-pie{margin:15px 0 0;font-size:12.5px;line-height:1.45;color:#6E747D}
+@media (max-width:360px){ .s1-gr{font-size:94px} .s1-sub{font-size:28px} }
 .hoy-box{transition:box-shadow .4s ease}
 .hoy-box.todo{border:var(--lleno);box-shadow:0 0 0 1px var(--acc),0 12px 36px color-mix(in srgb,var(--acc) 22%,transparent)}
 .toast.gol{background:var(--acc);color:var(--onAcc);font-family:var(--display);font-size:20px;letter-spacing:.02em;font-weight:400;animation:golT .5s cubic-bezier(.34,1.56,.64,1)}
@@ -818,7 +839,7 @@ html.inst .app:not(.notab)::after{height:calc(max(var(--ibMin,10px),var(--ib)) +
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=b59f042b"></script><script src="banco.js?v=b59f042b"></script><script src="app.js?v=b59f042b"></script>
+<script src="datos.js?v=d5b35b91"></script><script src="banco.js?v=d5b35b91"></script><script src="app.js?v=d5b35b91"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');

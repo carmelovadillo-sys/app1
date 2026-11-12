@@ -744,13 +744,20 @@ function razonesMejora(f){ var p=D.perfil, L=[], ini=inicio(), tot=entre(ini,f)+
     L.push([num(med), 'pasos al día'+(base?' · antes '+num(base):'')]); }
   var r=rachaCierre(); if(r>=3) L.push([String(r), 'días seguidos cerrando el día']);
   return L; }
-function mejorCard(f){ var c=cumplidosHasta(f), tot=entre(inicio(),f)+1, li='';
-  razonesMejora(f).forEach(function(x){ li+='<div class="row" style="gap:12px;align-items:baseline;padding:9px 0;border-top:var(--fina)"><span class="num acc" style="font-size:22px;min-width:64px">'+e(x[0])+'</span><span style="font-size:14px;color:var(--text2);flex:1">'+e(x[1])+'</span></div>'; });
-  return plega('mejor', 'Cuánto mejor eres', 'Desde el '+fechaCorta(inicio())+' · +'+pct(c)+' %', ic('retos',22,2.2),
-    '<div class="col" style="gap:2px"><span class="lbl">Eres un</span><span class="num acc" style="font-family:var(--display);font-size:60px;line-height:.92">+'+pct(c)+' %</span><strong style="font-size:17px">mejor que hace '+plural(tot,'día','días')+'</strong></div>'+
-    li+
-    '<p class="nota" style="margin:6px 0 0">Cada día que cumples todo subes un 1% sobre lo que ya eras. Por eso no es lo mismo cumplir 12 días sueltos que 12 seguidos.</p>'+
-    cta('COMPARTIRLO','compartir','mejora',ic('arrow'),'ghost sm'), false); }
+function mejorCard(f){ var c=cumplidosHasta(f);
+  return '<button type="button" class="box row sb" style="padding:14px;text-align:left;width:100%" data-a="go" data-v="mejora"><span class="row" style="gap:12px"><span class="thumb" aria-hidden="true">'+ic('retos',24,2.2)+'</span><span class="col" style="gap:2px"><strong style="font-size:16px">Cuánto mejor eres</strong><span style="font-size:13px;color:var(--text2)">Desde el '+fechaCorta(inicio())+' · +'+pct(c)+' %</span></span></span><span style="color:var(--text3)">'+ic('chev',18)+'</span></button>'; }
+/* La pantalla grande: el número y por qué. La misma que se comparte. */
+V.mejora = function(){ var f=hoy(), c=cumplidosHasta(f), tot=entre(inicio(),f)+1, li='';
+  razonesMejora(f).forEach(function(x){ li+='<div class="s1-r"><span class="s1-n">'+e(x[0])+'</span><span class="s1-t">'+e(x[1])+'</span></div>'; });
+  return headLbl('Tu 1%')+
+  '<div class="s1" role="img" aria-label="Eres un '+pct(c)+' por ciento mejor que hace '+tot+' días">'+
+    '<div class="s1-top"><span class="s1-logo">1%</span><span class="s1-marca">APP 1%</span><span class="s1-fecha">'+fechaCorta(f)+'</span></div>'+
+    '<div class="s1-mid"><span class="s1-ey">ERES UN</span><span class="s1-gr">'+pct(c)+'%</span><span class="s1-sub">MEJOR QUE<br>HACE '+(tot===1?'UN DÍA':num(tot)+' DÍAS')+'.</span></div>'+
+    '<div class="s1-bot"><span class="s1-ey" style="margin-bottom:11px">POR ESTO</span>'+li+
+      '<p class="s1-pie">Un 1% cada día que cumples todo. '+plural(c,'día','días')+', '+plural(c,'subida','subidas')+'.</p></div>'+
+  '</div>'+
+  cta('COMPARTIRLO','compartir','mejora',ic('arrow'))+
+  '<p class="nota">Sube un 1% sobre lo que ya eras, no sobre el principio. Por eso no es lo mismo cumplir '+tot+' días sueltos que '+tot+' seguidos.</p>'; };
 V.progreso = function(){ var f=hoy(), m=U.mes||f.slice(0,7), y=+m.slice(0,4), mo=+m.slice(5,7)-1, g='', c=cumplidosHasta(f);
   DIAS_C.forEach(function(x){ g+='<span class="lbl c">'+x+'</span>'; });
   var primero=m+'-01', off=dsem(primero), nd=new Date(y,mo+1,0).getDate();
@@ -2210,7 +2217,7 @@ function guiaHTML(){ var g=U.guia, pasos=[
 var TEST = ['bienvenida','plan'].concat(Object.keys(PREG));
 var TAB_DE = {hoy:'hoy',partido:'hoy',cierre:'hoy',ajustes:'hoy',atajoPasos:'progreso',pasosHist:'progreso',ajChungo:'hoy',ajCuerpo:'hoy',ajAreas:'hoy',ajGym:'hoy',ajPasos:'hoy',ajMovil:'hoy',ajDejar:'hoy',ajNombre:'hoy',ajTono:'hoy',ajAspecto:'hoy',privacidad:'hoy',
   gym:'gym',entreno:'gym',ejercicios:'gym',ejercicio:'gym',resumen:'gym',story:'gym',historial:'gym',records:'gym',rutinaEd:'gym',
-  progreso:'progreso',medallas:'progreso',razones:'hoy',wrap:'hoy',retos:'retos',reto:'retos',nuevoReto:'retos', mister:'mister'};
+  progreso:'progreso',medallas:'progreso',mejora:'progreso',razones:'hoy',wrap:'hoy',retos:'retos',reto:'retos',nuevoReto:'retos', mister:'mister'};
 /* Titular de Hoy: corto, motivador y según en qué punto del día estás */
 function titularHoy(f, st){
   var p=D.perfil||{}, cat;
