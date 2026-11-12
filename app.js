@@ -1546,7 +1546,13 @@ async function tarjeta(o){ await fuentesListas(); var W=1080, H=1920, c=document
   return new Promise(function(res){ c.toBlob(function(b){ res(b); }, 'image/png'); }); }
 /* Tarjeta del entreno, estilo A (foto a sangre). fmt 'ig' = stories 1080×1920; 'wa' = WhatsApp 1080×1080 */
 function datosEntreno(){ var xx=D.entrenos.filter(function(y){ return y.id===U.ultimo; })[0]; if(!xx) return null; var v=volumen(xx.ej), r=(xx.rec||[])[0];
-  return {fecha:fechaLarga(xx.fecha), foto:FOTOS[xx.id], rutina:xx.nombre, tiempo:dur(xx.fin-xx.ini), series:String(v.n), kg:num(v.v)+' kg', rec: r ? ('Récord · '+r.n+' '+(r.kg?kg(r.kg)+' × '+r.reps:r.reps+' reps')) : ''}; }
+  return {fecha:fechaLarga(xx.fecha), foto:FOTOS[xx.id], rutina:xx.nombre, tiempo:dur(xx.fin-xx.ini), series:String(v.n), kg:num(v.v)+' kg', ejs:listaEj(xx.ej), rec: r ? ('Récord · '+r.n+' '+(r.kg?kg(r.kg)+' × '+r.reps:r.reps+' reps')) : ''}; }
+/* Ejercicios del entreno para la tarjeta: [nombre, '4 × 80 kg']. El calentamiento no cuenta. */
+function listaEj(ej){ return (ej||[]).map(function(e){ var s=e.s.filter(function(y){ return !y[2]; }); if(!s.length) s=e.s; if(!s.length) return [e.n,''];
+  var ks=s.map(function(y){ return y[0]||0; }), mx=Math.max.apply(null,ks), mn=Math.min.apply(null,ks), det;
+  if(mx>0) det = mn===mx ? s.length+' × '+kg(mx)+' kg' : s.length+' × '+kg(mn)+'–'+kg(mx)+' kg';
+  else { var rs=s.map(function(y){ return y[1]||0; }), rmx=Math.max.apply(null,rs), rmn=Math.min.apply(null,rs); det = s.length+' × '+(rmn===rmx?rmx:rmn+'–'+rmx)+' reps'; }
+  return [e.n, det]; }); }
 function pastilla(x, t, px, py, alto, acc){ x.font='800 '+Math.round(alto*.44)+'px Inter, sans-serif'; var w=x.measureText(t).width+alto*.9;
   x.fillStyle=acc; x.beginPath(); if(x.roundRect) x.roundRect(px, py-alto, w, alto, alto/2); else x.rect(px, py-alto, w, alto); x.fill();
   x.fillStyle=textoAcc(); x.textBaseline='middle'; x.fillText(t, px+alto*.45, py-alto/2+2); x.textBaseline='alphabetic'; return w; }
@@ -1571,7 +1577,22 @@ async function tarjetaEntreno(d, fmt){ await fuentesListas(); var W=1080, H=fmt=
     x.fillStyle=i===st.length-1?acc:'#F2F2EE'; var sz=ajustarTexto(x, a[1].toUpperCase(), cw-24, nsz, fam); x.font=sz+'px '+fam; x.fillText(a[1].toUpperCase(), M+i*cw, y-(fmt==='wa'?46:52)); });
   y-=(fmt==='wa'?46:52)+nsz+28;
   var tsz=ajustarTexto(x, d.rutina.toUpperCase(), W-2*M, fmt==='wa'?168:220, fam); x.fillStyle='#F2F2EE'; x.font=tsz+'px '+fam; x.fillText(d.rutina.toUpperCase(), M, y); y-=tsz*.98;
-  if(d.rec){ var t=d.rec.toUpperCase(), alto=fmt==='wa'?62:72; x.font='800 '+Math.round(alto*.44)+'px Inter, sans-serif'; while(x.measureText(t).width>W-2*M-alto && t.length>12) t=t.slice(0,-2); pastilla(x, t, M, y, alto, acc); }
+  if(d.rec){ var t=d.rec.toUpperCase(), alto=fmt==='wa'?62:72; x.font='800 '+Math.round(alto*.44)+'px Inter, sans-serif'; while(x.measureText(t).width>W-2*M-alto && t.length>12) t=t.slice(0,-2); pastilla(x, t, M, y, alto, acc); y-=alto+(fmt==='wa'?20:26); }
+  /* los ejercicios, encima de todo lo anterior y solo los que caben */
+  if(d.ejs && d.ejs.length){
+    var LH=fmt==='wa'?54:64, fs=fmt==='wa'?34:40, ds=fmt==='wa'?30:34, tope=ty+(fmt==='wa'?100:130), cabe=Math.floor((y-56-tope)/LH);
+    if(cabe>=1){ var L=d.ejs.slice(0, Math.min(d.ejs.length, cabe)), extra=d.ejs.length-L.length;
+      if(extra>0 && L.length>1){ L=L.slice(0,-1); extra=d.ejs.length-L.length; }
+      var h=56+L.length*LH+(extra>0?46:0), top=y-h;
+      var vg=x.createLinearGradient(0,top-90,0,top); vg.addColorStop(0,'rgba(10,11,12,0)'); vg.addColorStop(1,'rgba(10,11,12,.86)'); x.fillStyle=vg; x.fillRect(0,top-90,W,90);
+      x.fillStyle='rgba(10,11,12,.86)'; x.fillRect(0,top,W,y-top+12);
+      x.fillStyle=acc; x.font='800 '+(fmt==='wa'?26:30)+'px Inter, sans-serif'; x.fillText('EJERCICIOS', M, top+34);
+      var yy=top+56;
+      L.forEach(function(f){ yy+=LH; x.textAlign='right'; x.fillStyle='#A6AAB2'; x.font='800 '+ds+'px Inter, sans-serif'; var dw=f[1]?x.measureText(f[1]).width:0; if(f[1]) x.fillText(f[1], W-M, yy); x.textAlign='left';
+        x.fillStyle='#F2F2EE'; x.font='800 '+fs+'px Inter, sans-serif'; var nm=f[0], maxw=W-2*M-dw-34; while(x.measureText(nm).width>maxw && nm.length>6) nm=nm.slice(0,-2); if(nm!==f[0]) nm=nm.replace(/[ ·]+$/,'')+'…'; x.fillText(nm, M, yy); });
+      if(extra>0){ x.fillStyle='#A6AAB2'; x.font='800 '+ds+'px Inter, sans-serif'; x.fillText('+'+extra+(extra>1?' ejercicios más':' ejercicio más'), M, yy+42); }
+    }
+  }
   return new Promise(function(res){ c.toBlob(function(b){ res(b); }, 'image/png'); }); }
 async function compartirEntreno(){ var d=datosEntreno(); if(!d){ toast('No hay nada que compartir todavía.'); return; }
   U.sheet={tipo:'compEnt', anim:true, ig:null, wa:null}; render(); if(U.sheet) U.sheet.anim=false;
