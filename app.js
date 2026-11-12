@@ -1560,7 +1560,7 @@ async function tarjetaEntreno(d, fmt){ await fuentesListas(); var W=1080, H=fmt=
   x.fillStyle='#101113'; x.fillRect(0,0,W,H);
   var im=d.foto?await cargarImg(d.foto):null;
   if(im){ var k=Math.max(W/im.width,H/im.height), w=im.width*k, h=im.height*k; x.drawImage(im,(W-w)/2,(H-h)/2,w,h);
-    var g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(10,11,12,.5)'); g.addColorStop(.22,'rgba(10,11,12,0)'); g.addColorStop(.48,'rgba(10,11,12,.12)'); g.addColorStop(fmt==='wa'?.7:.78,'rgba(10,11,12,.9)'); g.addColorStop(1,'#0A0B0C'); x.fillStyle=g; x.fillRect(0,0,W,H); }
+    var g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(10,11,12,.5)'); g.addColorStop(.22,'rgba(10,11,12,0)'); g.addColorStop(.48,'rgba(10,11,12,.12)'); g.addColorStop(fmt==='wa'?.7:.78,'rgba(10,11,12,.5)'); g.addColorStop(1,'rgba(10,11,12,.62)'); x.fillStyle=g; x.fillRect(0,0,W,H); }
   else { var r=x.createRadialGradient(W*.2,H*.12,40,W*.2,H*.12,H*.8); r.addColorStop(0,acc+'48'); r.addColorStop(1,'rgba(16,17,19,0)'); x.fillStyle=r; x.fillRect(0,0,W,H); }
   /* arriba: (logo en WhatsApp) + tu foto y tu nombre + fecha */
   var ty=fmt==='wa'?M+40:M+70, ax=M;
@@ -1569,31 +1569,47 @@ async function tarjetaEntreno(d, fmt){ await fuentesListas(); var W=1080, H=fmt=
   if(av){ x.save(); x.beginPath(); x.arc(ax+R, ty, R, 0, Math.PI*2); x.clip(); x.drawImage(av, ax, ty-R, R*2, R*2); x.restore(); x.strokeStyle=acc; x.lineWidth=5; x.beginPath(); x.arc(ax+R, ty, R+1, 0, Math.PI*2); x.stroke(); ax+=R*2+20; }
   x.fillStyle='#F2F2EE'; x.font='800 40px Inter, sans-serif'; x.textBaseline='middle'; if(nom) x.fillText(nom.slice(0,16), ax, ty+2);
   x.fillStyle='#C9CCD2'; x.font='800 30px Inter, sans-serif'; x.textAlign='right'; x.fillText(d.fecha.toUpperCase(), W-M, ty+2); x.textAlign='left'; x.textBaseline='alphabetic';
-  /* abajo, de abajo arriba: marca, cifras, rutina y récord */
-  var y=H-M;
-  if(fmt==='ig'){ x.fillStyle='#A6AAB2'; x.font='700 30px Inter, sans-serif'; x.fillText('1% · un 1% mejor cada día', M, y); y-=96; }
-  var st = fmt==='wa' ? [['Tiempo',d.tiempo],['Series',d.series],['Movidos',d.kg]] : [['Tiempo',d.tiempo],['Movidos',d.kg]], nsz=fmt==='wa'?92:118, cw=(W-2*M)/st.length;
-  st.forEach(function(a,i){ x.fillStyle='#A6AAB2'; x.font='800 '+(fmt==='wa'?28:32)+'px Inter, sans-serif'; x.fillText(a[0].toUpperCase(), M+i*cw, y);
-    x.fillStyle=i===st.length-1?acc:'#F2F2EE'; var sz=ajustarTexto(x, a[1].toUpperCase(), cw-24, nsz, fam); x.font=sz+'px '+fam; x.fillText(a[1].toUpperCase(), M+i*cw, y-(fmt==='wa'?46:52)); });
-  y-=(fmt==='wa'?46:52)+nsz+28;
-  var tsz=ajustarTexto(x, d.rutina.toUpperCase(), W-2*M, fmt==='wa'?168:220, fam); x.fillStyle='#F2F2EE'; x.font=tsz+'px '+fam; x.fillText(d.rutina.toUpperCase(), M, y); y-=tsz*.98;
-  if(d.rec){ var t=d.rec.toUpperCase(), alto=fmt==='wa'?62:72; x.font='800 '+Math.round(alto*.44)+'px Inter, sans-serif'; while(x.measureText(t).width>W-2*M-alto && t.length>12) t=t.slice(0,-2); pastilla(x, t, M, y, alto, acc); y-=alto+(fmt==='wa'?20:26); }
-  /* los ejercicios, encima de todo lo anterior y solo los que caben */
-  if(d.ejs && d.ejs.length){
-    var LH=fmt==='wa'?54:64, fs=fmt==='wa'?34:40, ds=fmt==='wa'?30:34, tope=ty+(fmt==='wa'?100:130), cabe=Math.floor((y-56-tope)/LH);
-    if(cabe>=1){ var L=d.ejs.slice(0, Math.min(d.ejs.length, cabe)), extra=d.ejs.length-L.length;
+  /* abajo, de abajo arriba: marca, cifras, rutina, récord y ejercicios.
+     Primero se mide todo sin pintar, para saber dónde empieza el bloque y poner ahí la foto difuminada. */
+  var y=H-M, yMarca=y;
+  if(fmt==='ig') y-=96;
+  var st = fmt==='wa' ? [['Tiempo',d.tiempo],['Series',d.series],['Movidos',d.kg]] : [['Tiempo',d.tiempo],['Movidos',d.kg]], nsz=fmt==='wa'?92:118, cw=(W-2*M)/st.length, dy=fmt==='wa'?46:52;
+  var yStats=y, szs=st.map(function(a){ return ajustarTexto(x, a[1].toUpperCase(), cw-24, nsz, fam); });
+  y-=dy+nsz+28;
+  var tsz=ajustarTexto(x, d.rutina.toUpperCase(), W-2*M, fmt==='wa'?168:220, fam), yRut=y; y-=tsz*.98;
+  var alto=fmt==='wa'?62:72, yRec=y, tRec='';
+  if(d.rec){ tRec=d.rec.toUpperCase(); x.font='800 '+Math.round(alto*.44)+'px Inter, sans-serif'; while(x.measureText(tRec).width>W-2*M-alto && tRec.length>12) tRec=tRec.slice(0,-2); y-=alto+(fmt==='wa'?20:26); }
+  var LH=fmt==='wa'?54:64, fs=fmt==='wa'?34:40, ds=fmt==='wa'?30:34, tope=ty+(fmt==='wa'?100:130), L=[], extra=0, yLista=0, top=y;
+  if(d.ejs && d.ejs.length){ var cabe=Math.floor((y-56-tope)/LH);
+    if(cabe>=1){ L=d.ejs.slice(0, Math.min(d.ejs.length, cabe)); extra=d.ejs.length-L.length;
       if(extra>0 && L.length>1){ L=L.slice(0,-1); extra=d.ejs.length-L.length; }
-      var h=56+L.length*LH+(extra>0?46:0), top=y-h;
-      var vg=x.createLinearGradient(0,top-90,0,top); vg.addColorStop(0,'rgba(10,11,12,0)'); vg.addColorStop(1,'rgba(10,11,12,.86)'); x.fillStyle=vg; x.fillRect(0,top-90,W,90);
-      x.fillStyle='rgba(10,11,12,.86)'; x.fillRect(0,top,W,y-top+12);
-      x.fillStyle=acc; x.font='800 '+(fmt==='wa'?26:30)+'px Inter, sans-serif'; x.fillText('EJERCICIOS', M, top+34);
-      var yy=top+56;
-      L.forEach(function(f){ yy+=LH; x.textAlign='right'; x.fillStyle='#A6AAB2'; x.font='800 '+ds+'px Inter, sans-serif'; var dw=f[1]?x.measureText(f[1]).width:0; if(f[1]) x.fillText(f[1], W-M, yy); x.textAlign='left';
-        x.fillStyle='#F2F2EE'; x.font='800 '+fs+'px Inter, sans-serif'; var nm=f[0], maxw=W-2*M-dw-34; while(x.measureText(nm).width>maxw && nm.length>6) nm=nm.slice(0,-2); if(nm!==f[0]) nm=nm.replace(/[ ·]+$/,'')+'…'; x.fillText(nm, M, yy); });
-      if(extra>0){ x.fillStyle='#A6AAB2'; x.font='800 '+ds+'px Inter, sans-serif'; x.fillText('+'+extra+(extra>1?' ejercicios más':' ejercicio más'), M, yy+42); }
-    }
-  }
+      top=y-(56+L.length*LH+(extra>0?46:0)); yLista=top; } }
+  /* el fondo del bloque es la misma foto, difuminada: entra poco a poco, sin corte ni franja negra */
+  if(im){ var bl=desenfoque(im, W, H), fade=Math.min(170, Math.max(60, top-ty-40)), ft=Math.max(0, top-fade), cap=document.createElement('canvas'); cap.width=W; cap.height=H-ft;
+    var gc=cap.getContext('2d'); gc.drawImage(bl, 0, ft, W, H-ft, 0, 0, W, H-ft);
+    gc.globalCompositeOperation='destination-in'; var mg=gc.createLinearGradient(0,0,0,fade); mg.addColorStop(0,'rgba(0,0,0,0)'); mg.addColorStop(1,'rgba(0,0,0,1)');
+    gc.fillStyle=mg; gc.fillRect(0,0,W,fade); gc.fillStyle='#000'; gc.fillRect(0,fade,W,H-ft-fade);
+    x.drawImage(cap, 0, ft);
+    var vg=x.createLinearGradient(0,ft,0,H); vg.addColorStop(0,'rgba(10,11,12,0)'); vg.addColorStop(fade/(H-ft),'rgba(10,11,12,.5)'); vg.addColorStop(1,'rgba(10,11,12,.66)'); x.fillStyle=vg; x.fillRect(0,ft,W,H-ft); }
+  /* ahora sí, se pinta (con sombra suave si hay foto, para que se lea sobre cualquier fondo) */
+  if(im){ x.shadowColor='rgba(0,0,0,.5)'; x.shadowBlur=14; x.shadowOffsetY=2; }
+  if(fmt==='ig'){ x.fillStyle='#D5D8DD'; x.font='700 30px Inter, sans-serif'; x.fillText('1% · un 1% mejor cada día', M, yMarca); }
+  st.forEach(function(a,i){ x.fillStyle='#C9CCD2'; x.font='800 '+(fmt==='wa'?28:32)+'px Inter, sans-serif'; x.fillText(a[0].toUpperCase(), M+i*cw, yStats);
+    x.fillStyle=i===st.length-1?acc:'#F2F2EE'; x.font=szs[i]+'px '+fam; x.fillText(a[1].toUpperCase(), M+i*cw, yStats-dy); });
+  x.fillStyle='#F2F2EE'; x.font=tsz+'px '+fam; x.fillText(d.rutina.toUpperCase(), M, yRut);
+  if(d.rec) pastilla(x, tRec, M, yRec, alto, acc);
+  if(L.length){ x.fillStyle=acc; x.font='800 '+(fmt==='wa'?26:30)+'px Inter, sans-serif'; x.fillText('EJERCICIOS', M, yLista+34);
+    var yy=yLista+56;
+    L.forEach(function(f){ yy+=LH; x.textAlign='right'; x.fillStyle='#C9CCD2'; x.font='800 '+ds+'px Inter, sans-serif'; var dw=f[1]?x.measureText(f[1]).width:0; if(f[1]) x.fillText(f[1], W-M, yy); x.textAlign='left';
+      x.fillStyle='#F2F2EE'; x.font='800 '+fs+'px Inter, sans-serif'; var nm=f[0], maxw=W-2*M-dw-34; while(x.measureText(nm).width>maxw && nm.length>6) nm=nm.slice(0,-2); if(nm!==f[0]) nm=nm.replace(/[ ·]+$/,'')+'…'; x.fillText(nm, M, yy); });
+    if(extra>0){ x.fillStyle='#C9CCD2'; x.font='800 '+ds+'px Inter, sans-serif'; x.fillText('+'+extra+(extra>1?' ejercicios más':' ejercicio más'), M, yy+42); } }
+  x.shadowColor='transparent'; x.shadowBlur=0; x.shadowOffsetY=0;
   return new Promise(function(res){ c.toBlob(function(b){ res(b); }, 'image/png'); }); }
+/* Copia muy desenfocada de la foto, con el mismo encuadre que la nítida. Sin filtros de canvas: se achica y se estira, así va en cualquier Safari. */
+function desenfoque(im, W, H){ var aw=Math.max(8,Math.round(W/24)), ah=Math.max(8,Math.round(H/24)), a=document.createElement('canvas'); a.width=aw; a.height=ah;
+  var g=a.getContext('2d'); g.imageSmoothingEnabled=true; var k=Math.max(aw/im.width, ah/im.height), w=im.width*k, h=im.height*k; g.drawImage(im,(aw-w)/2,(ah-h)/2,w,h);
+  var b=document.createElement('canvas'); b.width=W; b.height=H; var g2=b.getContext('2d'); g2.imageSmoothingEnabled=true; try{ g2.imageSmoothingQuality='high'; }catch(err){}
+  g2.drawImage(a,0,0,W,H); return b; }
 async function compartirEntreno(){ var d=datosEntreno(); if(!d){ toast('No hay nada que compartir todavía.'); return; }
   U.sheet={tipo:'compEnt', anim:true, ig:null, wa:null}; render(); if(U.sheet) U.sheet.anim=false;
   var bi=await tarjetaEntreno(d,'ig'), bw=await tarjetaEntreno(d,'wa'); if(!U.sheet || U.sheet.tipo!=='compEnt') return;
