@@ -273,10 +273,10 @@ figure{margin:0}
 .fila.pop .bx svg path{stroke-dasharray:30;stroke-dashoffset:30;animation:dibuja .3s ease-out .08s forwards}
 #scr.entra{animation:entra .26s var(--ease-out)}
 @keyframes entra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-/* La pantalla que se va se queda quieta debajo; la nueva entra encima. Cruce limpio:
-   la copia no anima ni repinta cristales, que es lo que atascaba. */
-.app .screen.sale{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;contain:paint}
-.sale,.sale *{-webkit-backdrop-filter:none !important;backdrop-filter:none !important;animation:none !important;transition:none !important;box-shadow:none !important;will-change:auto !important}
+/* Cambio de pantalla: un velo liso del color del fondo que se desvanece encima de la
+   pantalla nueva. Por debajo de la barra, para que la barra no parpadee. */
+.velo{position:absolute;inset:0;z-index:4;background:var(--bg);pointer-events:none;opacity:0;animation:velo .22s ease-out;will-change:opacity}
+@keyframes velo{from{opacity:1}to{opacity:0}}
 .rev{opacity:0;animation:entra .45s ease-out forwards}
 .barra-cta{flex:none;padding:8px max(20px,env(safe-area-inset-right,0px)) 8px max(20px,env(safe-area-inset-left,0px));background:var(--bg);border-top:var(--fina)}
 .barra-cta .cta{min-height:56px} .barra-cta .cta-t{font-size:24px}
@@ -317,7 +317,7 @@ figure{margin:0}
 .wfila{display:flex;align-items:center;gap:8px;border:none;background:none;padding:2px 0;text-align:left;font-size:13px;font-weight:700;min-height:30px}
 .wfila .bx{width:22px;height:22px;border-radius:6px;border:2px solid var(--text3);box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
 .wfila.on .bx{background:var(--acc);border:var(--lleno);color:var(--onAcc)}
-@media (prefers-reduced-motion: reduce){ #scr.entra,.sale,.fila.pop .bx,.crow.anim,.cd.nuevo.anim,.rev,.cele.anim,.sheet.anim{animation:none;opacity:1} .fila.pop .bx svg path{animation:none;stroke-dashoffset:0} .cta:active,.opt:active,.fila:active,.chip:active,.serie:active{transform:none} }
+@media (prefers-reduced-motion: reduce){ #scr.entra,.velo,.fila.pop .bx,.crow.anim,.cd.nuevo.anim,.rev,.cele.anim,.sheet.anim{animation:none;opacity:1} .fila.pop .bx svg path{animation:none;stroke-dashoffset:0} .cta:active,.opt:active,.fila:active,.chip:active,.serie:active{transform:none} }
 
 /* Fichas de ejercicio */
 .fig-ej{position:relative;margin:0;height:310px;flex-shrink:0;border-radius:14px;background:var(--caja2);overflow:hidden}
@@ -458,8 +458,8 @@ figure{margin:0}
 .sw33.on::after{transform:translateX(20px)}
 
 @media (prefers-reduced-motion: reduce){
-  #scr.entra,.sale,.sheet.anim,.cele.anim,.toast.in,.overlay:has(.anim){animation:none}
-  .sale{display:none}
+  #scr.entra,.velo,.sheet.anim,.cele.anim,.toast.in,.overlay:has(.anim){animation:none}
+  .velo{display:none}
   .cta:active,.opt:active,.fila:active,.chip:active,.serie:active,.tile:active,.fcard:active,.sq:active{transform:none}
   .sw33::after,.tb svg{transition:none}
 }
@@ -844,7 +844,7 @@ html.inst .app:not(.notab)::after{height:calc(max(var(--ibMin,10px),var(--ib)) +
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=5062d20d"></script><script src="banco.js?v=5062d20d"></script><script src="app.js?v=5062d20d"></script>
+<script src="datos.js?v=42b60699"></script><script src="banco.js?v=42b60699"></script><script src="app.js?v=42b60699"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');
