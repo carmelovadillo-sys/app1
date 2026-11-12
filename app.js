@@ -746,17 +746,21 @@ function razonesMejora(f){ var p=D.perfil, L=[], ini=inicio(), tot=entre(ini,f)+
   return L; }
 function mejorCard(f){ var c=cumplidosHasta(f);
   return '<button type="button" class="box row sb" style="padding:14px;text-align:left;width:100%" data-a="go" data-v="mejora"><span class="row" style="gap:12px"><span class="thumb" aria-hidden="true">'+ic('retos',24,2.2)+'</span><span class="col" style="gap:2px"><strong style="font-size:16px">Cuánto mejor eres</strong><span style="font-size:13px;color:var(--text2)">Desde el '+fechaCorta(inicio())+' · +'+pct(c)+' %</span></span></span><span style="color:var(--text3)">'+ic('chev',18)+'</span></button>'; }
+/* Tu foto de fondo: la grande si la hay; si no, la del perfil (pequeña, se difumina un poco) */
+function fotoFondo(){ return (typeof FOTOS!=='undefined') ? (FOTOS.perfilXL || FOTOS.perfil || '') : ''; }
 /* La pantalla grande: el número y por qué. La misma que se comparte. */
 V.mejora = function(){ var f=hoy(), c=cumplidosHasta(f), tot=entre(inicio(),f)+1, li='';
   razonesMejora(f).forEach(function(x){ li+='<div class="s1-r"><span class="s1-n">'+e(x[0])+'</span><span class="s1-t">'+e(x[1])+'</span></div>'; });
   return headLbl('Tu 1%')+
-  '<div class="s1" role="img" aria-label="Eres un '+pct(c)+' por ciento mejor que hace '+tot+' días">'+
+  '<div class="s1'+(fotoFondo()?' confoto'+(FOTOS.perfilXL?'':' baja'):'')+'" role="img" aria-label="Eres un '+pct(c)+' por ciento mejor que hace '+tot+' días">'+
+    (fotoFondo()?'<span class="s1-foto" aria-hidden="true" style="background-image:url('+fotoFondo()+')"></span>':'')+
     '<div class="s1-top"><span class="s1-logo">1%</span><span class="s1-marca">APP 1%</span><span class="s1-fecha">'+fechaCorta(f)+'</span></div>'+
     '<div class="s1-mid"><span class="s1-ey">'+(c?'ERES UN':'HOY EMPIEZAS')+'</span><span class="s1-gr">'+pct(c)+'%</span><span class="s1-sub">'+(c?'MEJOR QUE<br>HACE '+(tot===1?'UN DÍA':num(tot)+' DÍAS')+'.':'CUMPLE HOY<br>Y SUBE AL 1%.')+'</span></div>'+
     '<div class="s1-bot"><span class="s1-ey" style="margin-bottom:11px">POR ESTO</span>'+li+
       '<p class="s1-pie">'+(c?'Un 1% cada día que cumples todo. '+plural(c,'día','días')+', '+plural(c,'subida','subidas')+'.':'Cada día que cumplas todo, sube un 1%. Empieza hoy.')+'</p></div>'+
   '</div>'+
   cta('COMPARTIRLO','compartir','mejora',ic('arrow'))+
+  (fotoFondo()?'':'<button type="button" class="link c" style="min-height:40px" data-a="go" data-v="ajustes">Pon tu foto de perfil y saldrá de fondo</button>')+
   '<p class="nota">Sube un 1% sobre lo que ya eras, no sobre el principio. Por eso no es lo mismo cumplir '+tot+' días sueltos que '+tot+' seguidos.</p>'; };
 V.progreso = function(){ var f=hoy(), m=U.mes||f.slice(0,7), y=+m.slice(0,4), mo=+m.slice(5,7)-1, g='', c=cumplidosHasta(f);
   DIAS_C.forEach(function(x){ g+='<span class="lbl c">'+x+'</span>'; });
@@ -1307,6 +1311,9 @@ async function fotoDeArchivo(id, file){ try{ var url=await comprimir(file); foto
 function fotoPerfil(file){ var fr=new FileReader(); fr.onerror=function(){ toast('No he podido leer esa foto. Prueba con otra.'); };
   fr.onload=function(){ var im=new Image(); im.onerror=function(){ toast('No he podido leer esa foto. Prueba con otra.'); }; im.onload=function(){ var L=Math.min(im.naturalWidth, im.naturalHeight), c=document.createElement('canvas'); c.width=c.height=360;
     c.getContext('2d').drawImage(im, (im.naturalWidth-L)/2, (im.naturalHeight-L)/2, L, L, 0, 0, 360, 360); var url=c.toDataURL('image/jpeg', .8);
+    /* y una grande, solo en este móvil, para usarla de fondo en «cuánto mejor eres» */
+    try{ var k=Math.min(1, 1440/Math.max(im.naturalWidth, im.naturalHeight)), cg=document.createElement('canvas'); cg.width=Math.round(im.naturalWidth*k); cg.height=Math.round(im.naturalHeight*k);
+      cg.getContext('2d').drawImage(im, 0, 0, cg.width, cg.height); fotoPut('perfilXL', cg.toDataURL('image/jpeg', .82)); }catch(err){}
     fotoPut('perfil', url); D.perfil.foto=true; guardar(); if(NUBE.ok){ NUBE.db.doc(NUBE.base+'/foto-perfil').set({img:url}).catch(function(){}); } render(); vibrar(15); toast('Foto puesta.'); }; im.src=fr.result; }; fr.readAsDataURL(file); }
 async function fotosDeNube(){ if(!NUBE.ok) return; var extra=(D.deportes||[]).filter(function(x){ return x.foto; }).map(function(x){ return x.id; }); if(D.perfil && D.perfil.foto) extra.push('perfil'); for(var j=0;j<extra.length;j++){ if(!FOTOS[extra[j]]){ try{ var s2=await NUBE.db.doc(NUBE.base+'/foto-'+extra[j]).get(); if(s2.exists && s2.data().img) fotoPut(extra[j], s2.data().img); }catch(err){} } } for(var i=0;i<D.entrenos.length;i++){ var x=D.entrenos[i]; if(x.foto && !FOTOS[x.id]){ try{ var s=await NUBE.db.doc(NUBE.base+'/foto-'+x.id).get(); if(s.exists && s.data().img) fotoPut(x.id, s.data().img); }catch(err){} } } if(!escribiendo()) render(); }
 /* Números que suben al aparecer (resumen del entreno) */
@@ -1515,7 +1522,7 @@ function ajustarTexto(ctx, t, max, size, fam){ var s=size; ctx.font=s+'px '+fam;
 function cargarImg(src){ return new Promise(function(res){ var i=new Image(); i.onload=function(){ res(i); }; i.onerror=function(){ res(null); }; i.src=src; }); }
 async function tarjeta(o){ await fuentesListas(); var W=1080, H=1920, c=document.createElement('canvas'); c.width=W; c.height=H; var x=c.getContext('2d'), acc=colorAcc();
   x.fillStyle='#101113'; x.fillRect(0,0,W,H);
-  if(o.foto){ var im=await cargarImg(o.foto); if(im){ var k=Math.max(W/im.width,H/im.height), w=im.width*k, h=im.height*k; x.drawImage(im,(W-w)/2,(H-h)/2,w,h); var g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(10,11,12,.45)'); g.addColorStop(.4,'rgba(10,11,12,.15)'); g.addColorStop(.72,'rgba(10,11,12,.9)'); g.addColorStop(1,'rgba(10,11,12,1)'); x.fillStyle=g; x.fillRect(0,0,W,H); } }
+  if(o.foto){ var im=await cargarImg(o.foto); if(im){ var k=Math.max(W/im.width,H/im.height), w=im.width*k, h=im.height*k; if(o.fotoBaja){ try{ x.filter='blur(14px)'; }catch(err){} } x.drawImage(im,(W-w)/2,(H-h)/2,w,h); try{ x.filter='none'; }catch(err){} var g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(10,11,12,.45)'); g.addColorStop(.4,'rgba(10,11,12,.15)'); g.addColorStop(.72,'rgba(10,11,12,.9)'); g.addColorStop(1,'rgba(10,11,12,1)'); x.fillStyle=g; x.fillRect(0,0,W,H); } }
   else { var r=x.createRadialGradient(250,300,40,250,300,1300); r.addColorStop(0,acc+'55'); r.addColorStop(1,'rgba(16,17,19,0)'); x.fillStyle=r; x.fillRect(0,0,W,H); }
   /* logo */
   x.fillStyle=acc; x.beginPath(); if(x.roundRect) x.roundRect(80,110,150,150,34); else x.rect(80,110,150,150); x.fill();
@@ -1579,7 +1586,7 @@ function datosTarjeta(tipo){ var p=D.perfil;
     return {fecha:fechaLarga(xx.fecha), foto:FOTOS[xx.id], eyebrow: r?'Récord · '+r.n:'Entreno hecho', titulo:xx.nombre, sub: r ? (r.kg?kg(r.kg)+' kg × '+r.reps:r.reps+' repeticiones')+'. Mejor que nunca.' : plural(v.n,'serie','series')+' y todo apuntado.', stats:[['Tiempo',dur(xx.fin-xx.ini)],['Volumen',num(v.v)+' kg'],['Récords',String((xx.rec||[]).length)]]}; }
   if(tipo==='semana'){ var w=datosSemana(U.wrapL); return {fecha:'Semana del '+fechaCorta(U.wrapL), eyebrow:'Mi semana', grande:w.c+'/7', titulo:'días cumplidos', sub:'Mi curva va en +'+pct(w.despues)+' %.'+(w.ent?' '+plural(w.ent,'entreno','entrenos')+(w.recs?' y '+plural(w.recs,'récord','récords'):'')+'.':''), stats:[['Entrenos',String(w.ent)],['Kg movidos',num(w.kg)],['Partido',w.m[0]+'–'+w.m[1]]]}; }
   if(tipo==='mejora'){ var fm=hoy(), cm=cumplidosHasta(fm), tt=entre(inicio(),fm)+1, L=razonesMejora(fm);
-    return {eyebrow:'Eres un', grande:'+'+pct(cm)+' %', titulo:'mejor que hace '+plural(tt,'día','días'),
+    return {foto: fotoFondo()||null, fotoBaja: !FOTOS.perfilXL, eyebrow:'Eres un', grande:'+'+pct(cm)+' %', titulo:'mejor que hace '+plural(tt,'día','días'),
       sub: L.slice(0,3).map(function(x){ return x[0]+' '+x[1]; }).join('. ')+'.',
       stats: L.slice(0,3).map(function(x){ return [x[1].split(' ·')[0].slice(0,18), x[0]]; })}; }
   if(tipo==='cele' && U.ultimaCele){ var o=U.ultimaCele, sh=o.share||{}; return {eyebrow: sh.eyebrow||o.eyebrow, grande: sh.gr||o.grande, titulo: sh.ej||o.titulo.replace(/[¡!]/g,''), sub: sh.marca ? 'Hoy, '+sh.marca+'.' : (o.sub||''), stats:[['Nivel',nivelDe(cumplidosHasta(hoy())).n],['Curva','+'+pct(cumplidosHasta(hoy()))+' %']]}; }
@@ -2424,7 +2431,7 @@ function act(a,v,el){
     case 'ganasOk': D.ganas=(D.ganas||0)+1; U.sheet=null; var rg=v?retoPorId(v):null; if(rg){ (rg.ev=rg.ev||[]).push({k:kReto(rg)==='bolleria'?'antojo':'ganas', t:ahora(), f:f}); logrosReto(rg); } decir('Ganas superadas. Llevas '+plural(D.ganas,'vez','veces')+' ganándoles. Cada vez es más fácil.', f); guardar(); render(); celebrar({tipo:'dia', eyebrow:'Más fuerte que las ganas', titulo:'¡Superado!', grande:'×'+D.ganas, sub:'Veces que les has ganado a las ganas.', frase:'Así se hace. La ola ha pasado.', toast:'Ganas superadas.'}); break;
     case 'caida': U.sheet={tipo:'caida', anim:true}; render(); break;
     case 'medalla': U.sheet={tipo:'medalla', anim:true, id:v}; render(); break;
-    case 'quitarFotoPerfil': fotoDel('perfil'); D.perfil.foto=false; guardar(); render(); toast('Foto quitada.'); break;
+    case 'quitarFotoPerfil': fotoDel('perfil'); fotoDel('perfilXL'); D.perfil.foto=false; guardar(); render(); toast('Foto quitada.'); break;
     case 'caidaSi': var pd=p.dejar, dias=(ahora()-pd.desde)/86400000; pd.mejor=Math.max(pd.mejor||0, dias); pd.desde=ahora(); var dk=dia(f,true); delete dk.h.dejar; U.sheet=null; decir('Empezamos de nuevo. Tu mejor marca, '+plural(Math.floor(pd.mejor),'día','días')+', no te la quita nadie. Hoy cuenta igual.', f); guardar(); render(); toast('Contador a cero. Tu mejor marca se queda.'); break;
     case 'addRazon': var ri=document.getElementById('in-razon'), rv=ri?ri.value.trim():''; if(!rv) break; p.dejar.razones=p.dejar.razones||[]; p.dejar.razones.push(rv); guardar(); render(); break;
     case 'quitarRazon': p.dejar.razones.splice(+v,1); guardar(); render(); break;
