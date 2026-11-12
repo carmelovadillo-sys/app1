@@ -2249,12 +2249,19 @@ function render(){
   var barra = !enTest && barraCierre(), desc = !enTest && D.actual && D.actual.desc && !U.sheet ? descansoHTML() : '';
   app.classList.toggle('notab', enTest); app.classList.toggle('conbarra', !!barra); app.classList.toggle('condesc', !!desc);
   var vista = V[U.pantalla] ? V[U.pantalla]() : V.hoy();
-  app.innerHTML = '<div class="screen'+(ultimaPant!==null && ultimaPant!==U.pantalla?' entra':'')+'" id="scr">'+vista+'</div>'+
+  /* copia de la pantalla que se va, para cruzar las dos un cuarto de segundo */
+  var fantasma = null;
+  if(scr && ultimaPant!==null && ultimaPant!==U.pantalla && !U.sheet && !U.cele && !U.guia && !menosMov){
+    fantasma = scr.cloneNode(true); fantasma.id=''; fantasma.classList.remove('entra'); fantasma.classList.add('sale');
+    fantasma.setAttribute('aria-hidden','true'); fantasma.dataset.y = String(scr.scrollTop); }
+  app.innerHTML ='<div class="screen'+(ultimaPant!==null && ultimaPant!==U.pantalla?' entra':'')+'" id="scr">'+vista+'</div>'+
     (barra ? '<div class="barra-cta">'+cta('CERRAR EL DÍA','cerrarDia',hoy(),'<span class="small">30 s</span>')+'</div>' : '')+
     desc + (tab ? tabbar(tab) : '') +
     (U.toast ? '<div class="toast row sb'+(U.toast!==toastPrev?' in':'')+(U.golToast?' gol':'')+'" role="status"><span>'+e(U.toast)+'</span>'+(U.undo?'<button type="button" class="link" style="color:var(--onCta) !important;min-height:32px;padding:0 4px" data-a="deshacer">Deshacer</button>':'')+'</div>' : '') +
     sheetHTML() + (U.guia ? guiaHTML() : '') + (U.cele ? celeHTML() : '');
   toastPrev=U.toast;
+  if(fantasma){ app.appendChild(fantasma); fantasma.scrollTop = +fantasma.dataset.y || 0;
+    setTimeout(function(){ if(fantasma.parentNode) fantasma.parentNode.removeChild(fantasma); }, 260); }
   document.getElementById('scr').scrollTop = keep;
   U.recien=null; ultimaPant=U.pantalla; pintarFondo();
   if(U.cele){ ajustarGrande(); contarArriba(); } animarCuentas(); figuraAlDia();
