@@ -752,9 +752,9 @@ V.mejora = function(){ var f=hoy(), c=cumplidosHasta(f), tot=entre(inicio(),f)+1
   return headLbl('Tu 1%')+
   '<div class="s1" role="img" aria-label="Eres un '+pct(c)+' por ciento mejor que hace '+tot+' días">'+
     '<div class="s1-top"><span class="s1-logo">1%</span><span class="s1-marca">APP 1%</span><span class="s1-fecha">'+fechaCorta(f)+'</span></div>'+
-    '<div class="s1-mid"><span class="s1-ey">ERES UN</span><span class="s1-gr">'+pct(c)+'%</span><span class="s1-sub">MEJOR QUE<br>HACE '+(tot===1?'UN DÍA':num(tot)+' DÍAS')+'.</span></div>'+
+    '<div class="s1-mid"><span class="s1-ey">'+(c?'ERES UN':'HOY EMPIEZAS')+'</span><span class="s1-gr">'+pct(c)+'%</span><span class="s1-sub">'+(c?'MEJOR QUE<br>HACE '+(tot===1?'UN DÍA':num(tot)+' DÍAS')+'.':'CUMPLE HOY<br>Y SUBE AL 1%.')+'</span></div>'+
     '<div class="s1-bot"><span class="s1-ey" style="margin-bottom:11px">POR ESTO</span>'+li+
-      '<p class="s1-pie">Un 1% cada día que cumples todo. '+plural(c,'día','días')+', '+plural(c,'subida','subidas')+'.</p></div>'+
+      '<p class="s1-pie">'+(c?'Un 1% cada día que cumples todo. '+plural(c,'día','días')+', '+plural(c,'subida','subidas')+'.':'Cada día que cumplas todo, sube un 1%. Empieza hoy.')+'</p></div>'+
   '</div>'+
   cta('COMPARTIRLO','compartir','mejora',ic('arrow'))+
   '<p class="nota">Sube un 1% sobre lo que ya eras, no sobre el principio. Por eso no es lo mismo cumplir '+tot+' días sueltos que '+tot+' seguidos.</p>'; };
