@@ -273,9 +273,10 @@ figure{margin:0}
 .fila.pop .bx svg path{stroke-dasharray:30;stroke-dashoffset:30;animation:dibuja .3s ease-out .08s forwards}
 #scr.entra{animation:entra .26s var(--ease-out)}
 @keyframes entra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-/* La pantalla que se va: se queda un momento desvaneciéndose, para que el cambio no dé un salto */
-.sale{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;animation:sale .22s ease-in forwards}
-@keyframes sale{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-6px)}}
+/* La pantalla que se va se queda quieta debajo; la nueva entra encima. Cruce limpio:
+   la copia no anima ni repinta cristales, que es lo que atascaba. */
+.app .screen.sale{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;contain:paint}
+.sale,.sale *{-webkit-backdrop-filter:none !important;backdrop-filter:none !important;animation:none !important;transition:none !important;box-shadow:none !important;will-change:auto !important}
 .rev{opacity:0;animation:entra .45s ease-out forwards}
 .barra-cta{flex:none;padding:8px max(20px,env(safe-area-inset-right,0px)) 8px max(20px,env(safe-area-inset-left,0px));background:var(--bg);border-top:var(--fina)}
 .barra-cta .cta{min-height:56px} .barra-cta .cta-t{font-size:24px}
@@ -843,7 +844,7 @@ html.inst .app:not(.notab)::after{height:calc(max(var(--ibMin,10px),var(--ib)) +
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script src="datos.js?v=8a8a0cab"></script><script src="banco.js?v=8a8a0cab"></script><script src="app.js?v=8a8a0cab"></script>
+<script src="datos.js?v=5062d20d"></script><script src="banco.js?v=5062d20d"></script><script src="app.js?v=5062d20d"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');
