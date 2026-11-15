@@ -155,6 +155,10 @@ var AREAS = {
   estudio:{n:'ESTUDIO', t:'Estudiar o concentrarme', c:'el estudio'},
   leer:{n:'APRENDER', t:'Leer o aprender algo nuevo', c:'la lectura'}
 };
+/* nombre del área dentro de una frase: en otros idiomas lo resuelve i18n (artículo, preposición, mayúscula) */
+function areaC(k){ return (LOC && LOC.area) ? LOC.area(k) : AREAS[k].c; }
+function TV(t){ return LOC ? LOC.val(t) : t; }
+function unoTxt(m){ return (LOC && LOC.uno) ? LOC.uno(m) : String(m).toLowerCase(); }
 var ORDEN_AREAS = ['entreno','moverme','comida','movil','sueno','dejar','animo','orden','estudio','leer'];
 var DEJAR = {tabaco:['Tabaco o vaper','sin fumar ni vapear','fumar'], alcohol:['Alcohol','sin alcohol','beber'], apuestas:['Apuestas','sin apostar','apostar'], porros:['Porros','sin porros','fumar porros'], energeticas:['Energéticas','sin energéticas','tomar energéticas'], otra:['Otra cosa','sin eso que quieres dejar','caer']};
 
@@ -271,11 +275,11 @@ function tonoReal(feliz){ var t=D.perfil.tono||'directo';
   if((D.perfil.animo==='bajo'||D.perfil.animo==='muybajo') && t==='exigente') t='directo';
   return t; }
 function huecos(extra){ var p=D.perfil, f=hoy(), l=lunesDe(f), m=marcador(jugadas(l,f));
-  var h={nombre:p.nombre, 'día':DIAS[dsem(f)], curva:'+'+pct(cumplidosHasta(f))+' %', cumplidos:String(cumplidosHasta(f)), dia_n:String(diaN()), marcador:m[0]+'–'+m[1], 'área':AREAS[p.areas[0]].c};
+  var h={nombre:p.nombre, 'día':DIAS[dsem(f)], curva:'+'+pct(cumplidosHasta(f))+' %', cumplidos:String(cumplidosHasta(f)), dia_n:String(diaN()), marcador:m[0]+'–'+m[1], 'área':areaC(p.areas[0])};
   if(p.areas.indexOf('entreno')!==-1 && p.diasGym && p.diasGym.length){ h.hecho=String(entrenosSemana(l)); h.meta=String(p.diasGym.length); }
   for(var k in extra) h[k]=extra[k];
   return h; }
-function rellenar(t,h){ var falta=false; var r=t.replace(/\[([a-z_áéíóú]+)\]/g,function(m,k){ if(h[k]==null||h[k]===''){ falta=true; return m; } return LOC ? LOC.val(h[k]) : h[k]; }); return falta?null:r; }
+function rellenar(t,h){ var falta=false; var r=t.replace(/\[([a-z_áéíóú]+)\]/g,function(m,k){ if(h[k]==null||h[k]===''){ falta=true; return m; } return LOC ? LOC.val(h[k]) : h[k]; }); if(!falta && LOC && LOC.areaFix) r=LOC.areaFix(r); return falta?null:r; }
 function hash(t){ var h=0; for(var i=0;i<t.length;i++){ h=(h*31+t.charCodeAt(i))|0; } return 'h'+(h>>>0).toString(36); }
 function frase(sit, extra, feliz){ var B=BANCO[sit]; if(!B) return null; var t=tonoReal(feliz); var lista=B[t]||B.suave||B.directo; if(sit==='Día difícil') lista=B.suave;
   var h=huecos(extra||{}), ok=[];
@@ -628,7 +632,7 @@ function datoReal(f){ var p=D.perfil, ops=[], l=lunesDe(f), c=cumplidosHasta(f);
 function misterHoy(f){ var p=D.perfil, d=D.dias[f]||{h:{}}, ts=tareas(f), pend=ts.filter(function(k){ return !hechoT(k,f); }), c=cumplidosHasta(f), t;
   if(d.cerrado){ var m=sumar(f,1), tm=p.areas.filter(function(k){ return k!=='entreno' || planGym(m); }), u=ultimaSesion();
     if(tm.indexOf('entreno')!==-1) return 'Día cerrado. Mañana toca gym'+(u?': la última vez, '+u.n.toLowerCase()+' '+(u.kg?kg(u.kg)+' × '+u.reps:u.reps+' repeticiones')+'. Mañana, una más.':'.');
-    return 'Día cerrado. Mañana, '+(tm.length?tarea(tm[0],m).meta.toLowerCase().replace(/ hoy\b/,''):'descanso')+'. Ahora, a descansar.'; }
+    return 'Día cerrado. Mañana, '+(tm.length?tarea(tm[0],m).meta.toLowerCase().replace(/^hoy, /,'').replace(/ hoy\b/,''):'descanso')+'. Ahora, a descansar.'; }
   if(d.dificil) return hechoT('minimo',f) ? 'Lo mínimo, hecho. Hoy ya vale: tu curva no baja.' : 'Hoy solo cuenta esto: '+minimoTarea(p).meta.toLowerCase()+'. Con eso, vale.';
   if(!ts.length) t='Hoy no tienes nada que cumplir. Descansar también es parte del plan.';
   else if(!pend.length) t='Todo hecho. Te queda cerrar el día: 30 segundos.';
@@ -721,7 +725,7 @@ function responder(v){ var f=hoy(), yo={voy:'¿Cómo voy?',cuesta:'Hoy me cuesta
     r = (partidoOn() ? 'Esta semana vas '+m[0]+'–'+m[1]+' contra '+(lunesDe(inicio())===lunesDe(f)?'tu yo de antes de empezar':'tu semana pasada')+'. ' : '')+'Llevas '+plural(c,'día','días')+' con tu 1% cumplido y tu curva va en +'+pct(c)+' %.'+(t? ' Hoy, '+n+' de '+t+'.' : ' Hoy descansas.'); }
   if(v==='cuesta'){ var dej = D.perfil.areas.indexOf('dejar')!==-1 || retosActivos().some(function(x){ var R=retoDef(x.n); return R && R.dejar; });
     r = dej ? 'Vale. Aguanta diez minutos. Las ganas suben y bajan como una ola; en diez minutos suelen bajar. Mientras, bebe agua o cambia de sitio.' : (frase('Día difícil',{},2) || 'Vale. Hoy no hace falta hacerlo todo. Elige una cosa pequeña y lo demás, mañana.'); U.qr='cuesta'; }
-  if(v==='empujon'){ r = frase('Buenos días con tu 1%', {uno: tareas(f).length ? tarea(tareas(f)[0],f).uno.toLowerCase() : ''}) || msgDelDia(); }
+  if(v==='empujon'){ r = frase('Buenos días con tu 1%', {uno: tareas(f).length ? unoTxt(tarea(tareas(f)[0],f).meta) : ''}) || msgDelDia(); }
   if(v==='mejor'){ var x=pista();
     if(x.falta) r='Aún no lo sé. Necesito 7 días cerrados para ver algo; te faltan '+x.falta+'. Nunca me invento nada.';
     else if(x.nada) r='Con '+x.n+' días cerrados, no veo diferencias claras todavía. Sigue cerrando el día y te aviso cuando salga algo.';
@@ -765,7 +769,7 @@ V.mejora = function(){ var f=hoy(), c=cumplidosHasta(f), tot=entre(inicio(),f)+1
   '</div>'+
   cta('COMPARTIRLO','compartir','mejora',ic('arrow'))+
   (fotoFondo()?'':'<button type="button" class="link c" style="min-height:40px" data-a="go" data-v="ajustes">Pon tu foto de perfil y saldrá de fondo</button>')+
-  '<p class="nota">Sube un 1% sobre lo que ya eras, no sobre el principio. Por eso no es lo mismo cumplir '+tot+' días sueltos que '+tot+' seguidos.</p>'; };
+  '<p class="nota">Sube un 1% sobre lo que ya eras, no sobre el principio. Por eso no es lo mismo cumplir '+(tot===1?'1 día suelto que 1 seguido':tot+' días sueltos que '+tot+' seguidos')+'.</p>'; };
 V.progreso = function(){ var f=hoy(), m=U.mes||f.slice(0,7), y=+m.slice(0,4), mo=+m.slice(5,7)-1, g='', c=cumplidosHasta(f);
   DIAS_C.forEach(function(x){ g+='<span class="lbl c">'+x+'</span>'; });
   var primero=m+'-01', off=dsem(primero), nd=new Date(y,mo+1,0).getDate();
@@ -901,7 +905,7 @@ V.retos = function(){ var a='', l='', hist='', f=hoy(), pt=retosParaTi(), temas=
 V.nuevoReto = function(){ var R=RETOS[U.nuevoReto.i], ini='', av=AVISO_SALUD[R.tema];
   [['hoy','Hoy'],['manana','Mañana']].forEach(function(x){ ini+=opt(x[1], U.nuevoReto.cuando===x[0],'retoCuando',x[0],'c'); });
   return headLbl('Reto · '+R.tema.toLowerCase())+'<h1 class="h1" style="font-size:46px;margin-top:-6px">'+R.n+'.</h1>'+
-  '<section class="score s" aria-label="Cómo es el reto"><div><span class="lbl">Dura</span><span class="num">'+R.total+' DÍAS</span></div><div><span class="lbl">Te valen</span><span class="num acc">'+R.vale+'</span></div><div><span class="lbl">Cuenta</span><span class="num">'+(R.auto?'SOLO':'SÍ / NO')+'</span></div></section>'+
+  '<section class="score s" aria-label="Cómo es el reto"><div><span class="lbl">Dura</span><span class="num">'+R.total+' DÍAS</span></div><div><span class="lbl">Te valen</span><span class="num acc">'+R.vale+'</span></div><div><span class="lbl">Cómo se marca</span><span class="num">'+(R.auto?'AUTOMÁTICO':'SÍ / NO')+'</span></div></section>'+
   '<p class="p2">'+(R.auto ? R.q : 'Cada noche, al cerrar el día: «'+R.q+'» Sí o no, y listo.')+' Un mal día no lo tira todo.'+(R.dejar?' Llevarás un reloj con el tiempo que llevas sin hacerlo.':'')+'</p>'+
   (av?'<div class="box row" style="padding:12px 14px;align-items:flex-start"><span style="flex-shrink:0;margin-top:1px">'+ic('info',20,2.2)+'</span><p style="margin:0;font-size:14px;line-height:1.45">'+av+'</p></div>':'')+
   retoPreguntas()+'<div class="sec"><span class="lbl">¿Cuándo empiezas?</span><div class="grid2">'+ini+'</div></div><div class="fill"></div>'+cta('EMPEZAR EL RETO','empezarReto','','',retoCfgOk()?'':'off'); };
@@ -1374,7 +1378,8 @@ function ajustarMetas(){ var p=D.perfil, f=hoy(); if(!p) return;
 
 /* ---------- niveles ---------- */
 var NIVELES = [[0,'Novato'],[3,'En marcha'],[7,'Constante'],[21,'Disciplinado'],[50,'Imparable'],[100,'Máquina'],[200,'Leyenda']];
-function nivelDe(c){ var r=NIVELES[0], i; for(i=0;i<NIVELES.length;i++){ if(c>=NIVELES[i][0]) r=NIVELES[i]; } var sig=NIVELES[NIVELES.indexOf(r)+1]||null; return {n:r[1], i:NIVELES.indexOf(r)+1, desde:r[0], sig:sig}; }
+function nivN(t){ return (LOC && LOC.nivel) ? LOC.nivel(t) : t; }
+function nivelDe(c){ var r=NIVELES[0], i; for(i=0;i<NIVELES.length;i++){ if(c>=NIVELES[i][0]) r=NIVELES[i]; } var sig=NIVELES[NIVELES.indexOf(r)+1]||null; return {n:nivN(r[1]), i:NIVELES.indexOf(r)+1, desde:r[0], sig:sig?[sig[0],nivN(sig[1])]:null}; }
 
 /* ---------- medallas: solo por cosas reales ---------- */
 function totalKg(){ var v=0; D.entrenos.forEach(function(x){ x.ej.forEach(function(ej){ ej.s.forEach(function(s){ if(!s[2]) v+=(s[0]||0)*(s[1]||0); }); }); }); return v; }
@@ -1555,9 +1560,9 @@ async function tarjeta(o){ await fuentesListas(); var W=1080, H=1920, c=document
   return new Promise(function(res){ c.toBlob(function(b){ res(b); }, 'image/png'); }); }
 /* Tarjeta del entreno, estilo A (foto a sangre). fmt 'ig' = stories 1080×1920; 'wa' = WhatsApp 1080×1080 */
 function datosEntreno(){ var xx=D.entrenos.filter(function(y){ return y.id===U.ultimo; })[0]; if(!xx) return null; var v=volumen(xx.ej), r=(xx.rec||[])[0];
-  return {fecha:fechaLarga(xx.fecha), foto:FOTOS[xx.id], rutina:xx.nombre, tiempo:dur(xx.fin-xx.ini), series:String(v.n), kg:num(v.v)+' kg', ejs:listaEj(xx.ej), rec: r ? ('Récord · '+r.n+' '+(r.kg?kg(r.kg)+' × '+r.reps:r.reps+' reps')) : ''}; }
+  return {fecha:fechaLarga(xx.fecha), foto:FOTOS[xx.id], rutina:xx.nombre, tiempo:dur(xx.fin-xx.ini), series:String(v.n), kg:num(v.v)+' kg', ejs:listaEjTarjeta(xx.ej), rec: r ? ('Récord · '+r.n+' '+(r.kg?kg(r.kg)+' × '+r.reps:r.reps+' reps')) : ''}; }
 /* Ejercicios del entreno para la tarjeta: [nombre, '4 × 80 kg']. El calentamiento no cuenta. */
-function listaEj(ej){ return (ej||[]).map(function(e){ var s=e.s.filter(function(y){ return !y[2]; }); if(!s.length) s=e.s; if(!s.length) return [e.n,''];
+function listaEjTarjeta(ej){ return (ej||[]).map(function(e){ var s=e.s.filter(function(y){ return !y[2]; }); if(!s.length) s=e.s; if(!s.length) return [e.n,''];
   var ks=s.map(function(y){ return y[0]||0; }), mx=Math.max.apply(null,ks), mn=Math.min.apply(null,ks), det;
   if(mx>0) det = mn===mx ? s.length+' × '+kg(mx)+' kg' : s.length+' × '+kg(mn)+'–'+kg(mx)+' kg';
   else { var rs=s.map(function(y){ return y[1]||0; }), rmx=Math.max.apply(null,rs), rmn=Math.min.apply(null,rs); det = s.length+' × '+(rmn===rmx?rmx:rmn+'–'+rmx)+' reps'; }
@@ -1656,7 +1661,7 @@ descargarCopia = async function(){ var r=await darArchivo('app-1-copia-'+hoy()+'
   U.sheet={tipo:'copiaTexto'}; render(); };
 function icsTexto(hora){ var hh=hora.split(':'), f=hoy().replace(/-/g,''), p=D.perfil; p.recUid=p.recUid||('app1-'+uid2()+'@app1');
   var ini=f+'T'+pad(+hh[0])+pad(+hh[1])+'00', st=new Date(ahora()).toISOString().replace(/[-:]/g,'').slice(0,15)+'Z';
-  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//App 1%//ES','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT','UID:'+p.recUid,'DTSTAMP:'+st,'DTSTART:'+ini,'DURATION:PT5M','RRULE:FREQ=DAILY','SUMMARY:Cierra el día en la App 1% (30 s)','DESCRIPTION:Tu 1% de hoy: ábrela y cierra el día.','BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:Cierra el día en la App 1%','TRIGGER:PT0M','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n')+'\r\n'; }
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//App 1%//ES','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT','UID:'+p.recUid,'DTSTAMP:'+st,'DTSTART:'+ini,'DURATION:PT5M','RRULE:FREQ=DAILY','SUMMARY:'+TV('Cierra el día en la App 1% (30 s)'),'DESCRIPTION:'+TV('Tu 1% de hoy: ábrela y cierra el día.'),'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+TV('Cierra el día en la App 1%'),'TRIGGER:PT0M','END:VALARM','END:VEVENT','END:VCALENDAR'].join('\r\n')+'\r\n'; }
 function uid2(){ return Math.random().toString(36).slice(2,10); }
 async function crearRecordatorio(hora){ var hh=(hora||'22:00').split(':'), m=(+hh[0])*60+(+hh[1]||0); m=Math.round(m/30)*30%1440; var h2=pad(Math.floor(m/60))+'-'+pad(m%60), txt=pad(Math.floor(m/60))+':'+pad(m%60);
   if(EN_CLAUDE){ toast('El recordatorio funciona en la app instalada en tu iPhone.'); return; }
@@ -2473,7 +2478,7 @@ function act(a,v,el){
     case 'borrarRutinaSi': D.rutinas=D.rutinas.filter(function(x){ return x.id!==v; }); guardar(); U.sheet=null; U.rutinaEd=null; back(); toast('Rutina borrada.'); break;
     case 'numPaso': var sn=U.sheet; sn.val=Math.max(0,Math.min(24*60,sn.val+(+v))); var ne=document.getElementById('num-val'), est=document.getElementById('num-est'), mtn=metaDe(sn.k,f), okk = sn.k==='movil'? sn.val<=mtn : sn.val>=mtn; if(ne){ ne.textContent=hm(sn.val).toUpperCase(); ne.classList.toggle('acc',okk); } if(est) est.textContent = okk?'Dentro de tu meta':(sn.k==='movil'?'Por encima de tu meta':'Por debajo de tu meta'); vibrar(8); break;
     case 'guardarNum': var dn=dia(f,true), anN=cumplido(f), sk=U.sheet.k; fijarAreasHoy(); dn[sk==='movil'?'movilMin':'suenoMin']=U.sheet.val; U.sheet=null; guardar(); var okN=hecho(sk,f); if(okN){ sonar('marca'); vibrar(15); } despuesDeMarcar(anN, (sk==='movil'?'Móvil: ':'Sueño: ')+hm(dn[sk==='movil'?'movilMin':'suenoMin'])+(okN?'. Dentro de tu meta.':'. Fuera de tu meta.'), null); break;
-    case 'comprometo': var dc=dia(f,true); dc.compromiso=true; fijarAreasHoy(); decir(frase2('Buenos días con tu 1%',{uno: tareas(f).length ? tarea(tareas(f)[0],f).meta.toLowerCase() : ''}) || 'Dicho y apuntado. A por ello.', f); guardar(); render(); confeti(35); sonar('marca'); vibrar([15,30,15]); toast('Comprometido. A por tu 1%.'); break;
+    case 'comprometo': var dc=dia(f,true); dc.compromiso=true; fijarAreasHoy(); decir(frase2('Buenos días con tu 1%',{uno: tareas(f).length ? unoTxt(tarea(tareas(f)[0],f).meta) : ''}) || 'Dicho y apuntado. A por ello.', f); guardar(); render(); confeti(35); sonar('marca'); vibrar([15,30,15]); toast('Comprometido. A por tu 1%.'); break;
     case 'verWrap': D.vistos['wrap-'+v]=1; guardar(); U.wrapL=v; U.wrapP=0; go('wrap'); break;
     case 'wrapSig': if((U.wrapP||0) < (+v)-1){ U.wrapP=(U.wrapP||0)+1; vibrar(8); render(); if(U.wrapP===(+v)-1) confeti(50); } break;
     case 'ganas': U.sheet={tipo:'ganas', anim:true, fin:ahora()+600000, reto:v||null}; render(); U.sheet.anim=false; break;

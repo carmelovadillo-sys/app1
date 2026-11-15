@@ -73,14 +73,53 @@ function cambiaEuros(s){
 }
 
 var LOC = DIC.loc; /* días, meses y fechas */
+var UK = LANG==='en' && ['GB','IE','AU','NZ'].indexOf(region)!==-1; /* inglés británico: fechas "Monday 16 Nov" y ortografía */
+if(UK){
+  var larga0 = LOC.larga;
+  LOC = { dias:LOC.dias, diasC:LOC.diasC, meses:LOC.meses,
+    larga:function(d, ds){ var s=LOC.dias[ds]+' '+d.getDate()+' '+LOC.meses[d.getMonth()].slice(0,3); var o=new String(s); o.toLowerCase=function(){ return s; }; return o; },
+    corta:function(d){ var s=d.getDate()+' '+LOC.meses[d.getMonth()].slice(0,3); var o=new String(s); o.toLowerCase=function(){ return s; }; return o; } };
+}
 window.I18N_LOC = {
   lang:LANG, dias:LOC.dias, diasC:LOC.diasC, meses:LOC.meses,
   fechaLarga:function(d, ds){ return LOC.larga(d, ds); },
   fechaCorta:function(d){ return LOC.corta(d); },
   num:num, kg:kg, eur:eur, eur0:eur0, moneda:moneda, f:P.f,
-  val:function(v){ return v==null ? v : traducir(String(v)); },
+  val:function(v){ return v==null ? v : (String(v).indexOf('\u27e6A:')===0 ? v : traducir(String(v))); },
+  area:function(k){ return '\u27e6A:'+k+'\u27e7'; },
+  areaFix:function(t){ return areaFix(t); },
+  nivel:function(t){ var r=traducir('\u27e8n\u27e9'+t); return r.indexOf('\u27e8n\u27e9')===0 ? t : r; },
+  uno:function(m){ var t=traducir('\u27e8u\u27e9'+m); return t.indexOf('\u27e8u\u27e9')===0 ? String(m).toLowerCase() : t; },
   escalar:escalar
 };
+/* nombre del área dentro de una frase de Míster: [art, nombre] según idioma.
+   El artículo, la preposición (du, à la, na, pelo…) y la mayúscula se resuelven aquí. */
+var AREA_N = {
+  en:{ entreno:['','gym'], moverme:['','moving more'], comida:['','food'], movil:['','screen time'], sueno:['','sleep'], dejar:['','quitting'], animo:['','your mood'], orden:['','getting organized'], estudio:['','studying'], leer:['','reading'] },
+  fr:{ entreno:['la','muscu'], moverme:['le','mouvement'], comida:["l'",'alimentation'], movil:['le','téléphone'], sueno:['le','sommeil'], dejar:["l'",'arrêt'], animo:['le','moral'], orden:["l'",'organisation'], estudio:['les','études'], leer:['la','lecture'] },
+  de:{ entreno:['','Gym'], moverme:['','Bewegung'], comida:['','Essen'], movil:['','Handy'], sueno:['','Schlaf'], dejar:['','Aufhören'], animo:['','Stimmung'], orden:['','Organisation'], estudio:['','Lernen'], leer:['','Lesen'] },
+  pt:{ entreno:['a','academia'], moverme:['o','movimento'], comida:['a','comida'], movil:['o','celular'], sueno:['o','sono'], dejar:['o','parar'], animo:['o','humor'], orden:['a','organização'], estudio:['o','estudo'], leer:['a','leitura'] }
+}[LANG] || {};
+var PREP = {
+  fr:{ de:{ le:'du', la:'de la', "l'":"de l'", les:'des' }, 'à':{ le:'au', la:'à la', "l'":"à l'", les:'aux' }, en:'bare' },
+  pt:{ em:{ a:'na', o:'no' }, de:{ a:'da', o:'do' }, por:{ a:'pela', o:'pelo' }, a:{ a:'à', o:'ao' } }
+}[LANG] || {};
+function areaFix(t){
+  if(t.indexOf('\u27e6A:')===-1) return t;
+  return t.replace(/(?:(^|[^\wÀ-ÿ])([A-Za-zÀ-ÿ]+)(\s))?\u27e6A:([a-z]+)\u27e7/g, function(m, sep, prev, esp, k, off, str){
+    var a=AREA_N[k]||['',k], art=a[0], nom=a[1], pre=(sep||'')+(prev||'')+(esp||''), antes=str.slice(0, off)+pre;
+    var ini=/(^|[.!?…¿¡]\s+|[“"«]\s?|:\s)$/.test(antes);
+    var out;
+    if(prev){ var pl=prev.toLowerCase(), tb=PREP[pl];
+      if(tb==='bare'){ out=(sep||'')+prev+esp+nom; return ini && !prev ? cap1(out) : out; }
+      if(tb && art && tb[art]){ var pr=tb[art]; if(prev.charAt(0)!==prev.charAt(0).toLowerCase()) pr=cap1(pr); return (sep||'')+pr+(art==="l'"&&LANG==='fr'?'':' ')+nom; }
+    }
+    var cuerpo = art ? art+(art.slice(-1)==="'"?'':' ')+nom : nom;
+    if(LANG!=='de' && ini) cuerpo=cap1(cuerpo);
+    return pre+cuerpo;
+  });
+}
+function cap1(x){ return x.charAt(0).toLocaleUpperCase(LANG)+x.slice(1); }
 
 /* importes de ejemplo de los retos y equivalencias, a la escala del país */
 function bonito(v){ if(v<10) return Math.round(v); if(v<100) return Math.round(v/5)*5; if(v<1000) return Math.round(v/10)*10; return Math.round(v/100)*100; }
@@ -105,9 +144,9 @@ function cargar(obj){
       partes.forEach(function(p){ if(p.length>largo.length) largo=p; });
       if(!/[A-Za-zÀ-ÿ]/.test(largo) || /\}\{/.test(k)) continue;
       var orden=[]; k.replace(HUECO,function(m,n){ orden.push(+n); return m; });
-      var re = new RegExp('^'+partes.map(esc).join('(.+?)')+'$');
-      PATS.push({ re:re, ancla:largo, orden:orden, t:v, n:k.length });
-      EXACTO[k]=v;
+      var re = new RegExp('^'+partes.map(esc).join('(.+?)')+'$','i');
+      PATS.push({ re:re, ancla:largo.toLowerCase(), k:k, orden:orden, t:v, n:k.replace(HUECO,'').length });
+      EXACTO[k]=v; MIN[k.toLowerCase()]=v;
     } else {
       EXACTO[k]=v; MIN[k.toLowerCase()]=v;
       if(/\d/.test(k)) generaliza(k,v);
@@ -169,8 +208,9 @@ function fmtNum(n){ return n; } /* num(), kg() y eur() ya dan el formato del idi
 /* señales de que un trozo sigue en español */
 var ES_RE = /[ñ¿¡]|\b(?:el|y|los|las|con|para|por|una|ya|día|días|has|ningún|aún|muy|pero|más|lo|hoy|semana|tu|te)\b/i;
 function porPatron(s){
+  var sl=s.toLowerCase();
   for(var i=0;i<PATS.length;i++){ var p=PATS[i];
-    if(s.indexOf(p.ancla)===-1) continue;
+    if(sl.indexOf(p.ancla)===-1) continue;
     var m=p.re.exec(s); if(!m) continue;
     var caps=m.slice(1);
     /* un hueco no puede tragarse otra frase: eso lo resuelve porTrozos */
@@ -178,6 +218,7 @@ function porPatron(s){
     var mal=false;
     var r=p.t.replace(HUECO, function(x,j){ var c=caps[+j]; if(c==null) return x; if(/^[\d\s.,%−+-]+$/.test(c)) return fmtNum(c); var tc=traducir(c); if(tc===c && ES_RE.test(c)) mal=true; return tc; });
     if(mal) continue;
+    if(s.charAt(0)!==p.k.charAt(0) && s.charAt(0)===s.charAt(0).toLowerCase() && p.k.charAt(0)!==p.k.charAt(0).toLowerCase()) r=caso(s,r);
     return r;
   }
   return null;
@@ -194,11 +235,19 @@ function porTrozos(s){
     var x=tr[i];
     if(i%2){ out+=(x===': ' && LANG==='fr') ? '\u00a0: ' : x; continue; }
     if(!x) continue;
+    /* varios trozos juntos que forman una frase conocida ("Con 45 minutos vale. Apunta lo que hagas.") */
+    var largo=null, lj=0;
+    for(var j=Math.min(tr.length-1, i+6); j>i && largo==null; j-=2){
+      var cand=tr.slice(i,j+1).join(''), cj=cand;
+      var tj=uno(cj) || (j<tr.length-1 && tr[j+1]==='. ' ? uno(cj+'.') : null);
+      if(tj!=null){ if(j<tr.length-1 && tr[j+1]==='. ' && uno(cj)==null) tj=tj.replace(/\.$/,''); largo=tj; lj=j; }
+    }
+    if(largo!=null){ out+=largo; ok=true; i=lj; continue; }
     if(!/[A-Za-zÀ-ÿ]/.test(x)){ out+=x; continue; }
     var t=null;
     if(tr[i+1]==='. '){ t=uno(x+'.'); if(t!=null) t=t.replace(/\.$/,''); }
     if(t==null && tr[i+1]===': '){ t=uno(x+':'); if(t!=null) t=t.replace(/\s?:$/,''); }
-    if(t==null) t=uno(x);
+    if(t==null) t=unoQ(x);
     if(t==null && i===tr.length-1 && /[.!?]$/.test(x)){ var t0=uno(x.replace(/[.!?]$/,'')); if(t0!=null) t=t0+x.slice(-1); }
     if(t==null) return null;
     out+=t; ok=true;
@@ -208,6 +257,8 @@ function porTrozos(s){
 function uno(s){
   return exacto(s) || porNumeros(s) || porPatron(s);
 }
+var QRE=/^([«“"]\s?)([^«»“”"]+?)(\s?[»”"][.,;:!?…]*)$/;
+function unoQ(x){ var m=exacto(x)==null && QRE.exec(x); if(m){ var r=traducir(m[2]); if(r!==m[2]) return m[1]+r+m[3]; } return uno(x); }
 var prof=0;
 function traducir(s){
   if(MEMO.has(s)) return MEMO.get(s);
@@ -216,9 +267,13 @@ function traducir(s){
   var r=null;
   if(++prof<6){
     var lk=lim.replace(/ /g,' ');
-    r = uno(lk) || porTrozos(lk) || porLista(lk);
+    r = exacto(lk);
+    if(r==null){ var qm=QRE.exec(lk); if(qm){ var r4=traducir(qm[2]); if(r4!==qm[2]) r=qm[1]+r4+qm[3]; } }
+    if(r==null) r = uno(lk);
+    if(r==null) r = porTrozos(lk) || porLista(lk);
     if(r==null){ var pm=/^([·•—–:,.]+\s*)(.+)$/.exec(lk); if(pm){ var r2=traducir(pm[2]); if(r2!==pm[2]) r=pm[1]+r2; } }
     if(r==null){ var sm=/^(.+?)([:.,;]+)$/.exec(lk); if(sm){ var r3=uno(sm[1]); if(r3!=null) r=r3+sm[2]; } }
+    if(r==null){ var vm=/^(.+), (vista (?:de|desde)[^,]+)$/.exec(lk); if(vm){ var v1=traducir(vm[1]), v2=uno(vm[2]); if(v2!=null) r=v1+', '+v2; } }
     if(r==null && lim==='€') r=SIMB[P.mon];
   }
   prof--;
@@ -234,6 +289,25 @@ function traducir(s){
 function fichas(s){
   if(s.indexOf('⟦')!==-1){ s=s.replace(/⟦linea⟧/g,P.linea).replace(/⟦lineaN⟧/g,P.lineaN).replace(/⟦em⟧/g,P.em); if(LANG==='en') s=s.replace(/(^|[.!?]\s+)the /g, function(m,a){ return a+'The '; }); }
   if(s.indexOf('€')!==-1 && (P.mon!=='EUR' || LANG==='en')) s=cambiaEuros(s);
+  if(s.indexOf('\u27e6A:')!==-1) s=areaFix(s);
+  if(UK) s=britanico(s);
+  return tipo(s);
+}
+/* inglés británico (Reino Unido, Irlanda, Australia, Nueva Zelanda) */
+var UKMAP = [['colors','colours'],['color','colour'],['organized','organised'],['organizing','organising'],['organize','organise'],['liters','litres'],['liter','litre'],['kilometers','kilometres'],['kilometer','kilometre'],['centimeters','centimetres'],['centimeter','centimetre'],['judgment','judgement'],['analyzed','analysed'],['analyzing','analysing'],['analyze','analyse'],['centered','centred'],['center','centre'],['favorite','favourite'],['favor','favour'],['soccer','football'],['sneakers','trainers'],['vacation','holiday'],['movies','films'],['movie','film'],['gray','grey'],['realize','realise'],['behavior','behaviour'],['neighbor','neighbour'],['fulfill','fulfil'],['theater','theatre'],['defense','defence'],['meters','metres'],['skeptic','sceptic'],['jewelry','jewellery'],['program','programme']];
+var UKRE = UKMAP.filter(function(p){ return p[0]!=='program'; }).map(function(p){ return [new RegExp('\\b'+p[0]+'\\b','gi'), p[1]]; });
+UKRE.push([/\bMath\b/g,'Maths']);
+function britanico(s){
+  for(var i=0;i<UKRE.length;i++){ s=s.replace(UKRE[i][0], function(m){ var r=UKRE[i][1]; if(m===m.toUpperCase() && m.length>1) return r.toUpperCase(); return m.charAt(0)===m.charAt(0).toUpperCase() ? r.charAt(0).toUpperCase()+r.slice(1) : r; }); }
+  return s;
+}
+/* tipografía de cada idioma: espacios y porcentajes */
+function tipo(s){
+  if(LANG==='fr'){
+    s=s.replace(/([^\s\u00a0\u202f])[ \u00a0\u202f]?([?!;])(?=\s|$|[»”)])/g,'$1\u202f$2').replace(/([^\s\u00a0\u202f\d])[ \u00a0]?:(?=\s|$)/g,'$1\u00a0:').replace(/«[ \u00a0]?/g,'«\u00a0').replace(/[ \u00a0]?»/g,'\u00a0»');
+  }
+  if(LANG==='fr' || LANG==='de') s=s.replace(/(\d)[ \u00a0]?%/g,'$1\u00a0%');
+  else if(LANG==='pt' || LANG==='en') s=s.replace(/(\d)[ \u00a0]%/g,'$1%');
   return s;
 }
 window.I18N_T = traducir;

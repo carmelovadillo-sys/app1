@@ -853,10 +853,10 @@ html.inst .app:not(.notab)::after{height:calc(max(var(--ibMin,10px),var(--ib)) +
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
 <main class="app" id="app" data-tema="auto" data-color="amarillo" aria-label="App 1%"></main>
 <p class="cap">App 1% · se ve mejor en el móvil</p>
-<script>/* idioma: el del iPhone o el elegido en Ajustes; el español no carga nada más */(function(){ var L="auto"; try{ L=localStorage.getItem("app1pct.lang")||"auto"; }catch(e){} var OK={es:1,en:1,fr:1,de:1,pt:1}; if(!OK[L]){ L="en"; var ls=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||"es"]; for(var i=0;i<ls.length;i++){ var c=String(ls[i]).slice(0,2).toLowerCase(); if(OK[c]){ L=c; break; } } } if(L!=="es") document.write('<script src="i18n/'+L+'.js?v=1a7cae59"><\/script>'); })();</script>
-<script src="i18n/i18n.js?v=1a7cae59"></script>
-<script src="datos.js?v=1a7cae59"></script>
-<script>if(window.I18N_DATOS) I18N_DATOS();</script><script src="banco.js?v=1a7cae59"></script><script src="app.js?v=1a7cae59"></script>
+<script>/* idioma: el del iPhone o el elegido en Ajustes; el español no carga nada más */(function(){ var L="auto"; try{ L=localStorage.getItem("app1pct.lang")||"auto"; }catch(e){} var OK={es:1,en:1,fr:1,de:1,pt:1}; if(!OK[L]){ L="en"; var ls=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||"es"]; for(var i=0;i<ls.length;i++){ var c=String(ls[i]).slice(0,2).toLowerCase(); if(OK[c]){ L=c; break; } } } if(L!=="es") document.write('<script src="i18n/'+L+'.js?v=5bbbc535"><\/script>'); })();</script>
+<script src="i18n/i18n.js?v=5bbbc535"></script>
+<script src="datos.js?v=5bbbc535"></script>
+<script>if(window.I18N_DATOS) I18N_DATOS();</script><script src="banco.js?v=5bbbc535"></script><script src="app.js?v=5bbbc535"></script>
 <script>(function(){ /* app instalada: pantalla entera hasta abajo. Si iOS dice que se ve menos que la pantalla (pasa en algunos iPhone), la app se alarga hasta el borde y la barra sube lo que falte para no quedar cortada. */
   var st=window.navigator.standalone===true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches); if(!st) return;
   var r=document.documentElement; r.classList.add('inst');
