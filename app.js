@@ -23,11 +23,15 @@ function lunesDe(s){ return sumar(s,-dsem(s)); }
 var DIAS = ['lunes','martes','miércoles','jueves','viernes','sábado','domingo'];
 var DIAS_C = ['L','M','X','J','V','S','D'];
 var MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+/* idiomas (i18n/i18n.js): días, meses, números y dinero del idioma elegido. Sin él, todo en español. */
+var LOC = window.I18N_LOC || null;
+if(LOC){ DIAS=LOC.dias; DIAS_C=LOC.diasC; MESES=LOC.meses; }
+function TR(t){ return window.I18N_TR ? window.I18N_TR(t) : t; }
 function cap(t){ t=String(t); return t.charAt(0).toUpperCase()+t.slice(1); }
-function fechaLarga(s){ var d=deIso(s); return cap(DIAS[dsem(s)])+' '+d.getDate()+' '+MESES[d.getMonth()].slice(0,3); }
-function fechaCorta(s){ var d=deIso(s); return d.getDate()+' '+MESES[d.getMonth()].slice(0,3); }
-function num(x,dec){ if(x==null||isNaN(x)) return '—'; var r = dec ? Math.round(x*10)/10 : Math.round(x); return String(r).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
-function kg(x){ if(x==null||x==='') return '—'; return String(Math.round(x*100)/100).replace('.',','); }
+function fechaLarga(s){ var d=deIso(s); if(LOC) return LOC.fechaLarga(d, dsem(s)); return cap(DIAS[dsem(s)])+' '+d.getDate()+' '+MESES[d.getMonth()].slice(0,3); }
+function fechaCorta(s){ var d=deIso(s); if(LOC) return LOC.fechaCorta(d); return d.getDate()+' '+MESES[d.getMonth()].slice(0,3); }
+function num(x,dec){ if(LOC) return LOC.num(x,dec); if(x==null||isNaN(x)) return '—'; var r = dec ? Math.round(x*10)/10 : Math.round(x); return String(r).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
+function kg(x){ if(LOC) return LOC.kg(x); if(x==null||x==='') return '—'; return String(Math.round(x*100)/100).replace('.',','); }
 function mmss(s){ s=Math.max(0,Math.round(s)); var h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60; return h? h+':'+pad(m)+':'+pad(ss) : m+':'+pad(ss); }
 function dur(ms){ var m=Math.round(ms/60000); if(m<60) return m+' min'; return Math.floor(m/60)+' h '+pad(m%60); }
 function uid(){ return Math.random().toString(36).slice(2,9)+ahora().toString(36).slice(-4); }
@@ -271,12 +275,12 @@ function huecos(extra){ var p=D.perfil, f=hoy(), l=lunesDe(f), m=marcador(jugada
   if(p.areas.indexOf('entreno')!==-1 && p.diasGym && p.diasGym.length){ h.hecho=String(entrenosSemana(l)); h.meta=String(p.diasGym.length); }
   for(var k in extra) h[k]=extra[k];
   return h; }
-function rellenar(t,h){ var falta=false; var r=t.replace(/\[([a-z_áéíóú]+)\]/g,function(m,k){ if(h[k]==null||h[k]===''){ falta=true; return m; } return h[k]; }); return falta?null:r; }
+function rellenar(t,h){ var falta=false; var r=t.replace(/\[([a-z_áéíóú]+)\]/g,function(m,k){ if(h[k]==null||h[k]===''){ falta=true; return m; } return LOC ? LOC.val(h[k]) : h[k]; }); return falta?null:r; }
 function hash(t){ var h=0; for(var i=0;i<t.length;i++){ h=(h*31+t.charCodeAt(i))|0; } return 'h'+(h>>>0).toString(36); }
 function frase(sit, extra, feliz){ var B=BANCO[sit]; if(!B) return null; var t=tonoReal(feliz); var lista=B[t]||B.suave||B.directo; if(sit==='Día difícil') lista=B.suave;
   var h=huecos(extra||{}), ok=[];
   var tres = D.perfil && tareas(hoy()).length===3;
-  lista.forEach(function(x){ if(/\b(te aviso|aviso|avisar|avise|avisos|te escribo a las|qu[eé] hora te|hora te pongo|notificaci)/i.test(x)) return; if(!tres && /\b(tres|las 3)\b/i.test(x)) return; if(/\b(dos de tres|2 de 3)\b/i.test(x) && !tres) return; var r=rellenar(x,h); if(r) ok.push(r); });
+  lista.forEach(function(x){ if(/\b(te aviso|aviso|avisar|avise|avisos|te escribo a las|qu[eé] hora te|hora te pongo|notificaci)/i.test(x)) return; if(!tres && /\b(tres|las 3)\b/i.test(x)) return; if(/\b(dos de tres|2 de 3)\b/i.test(x) && !tres) return; var r=rellenar(TR(x),h); if(r) ok.push(r); });
   if(!ok.length) return null;
   var lim=sumar(hoy(),-30), libres=ok.filter(function(r){ var u=D.usadas[hash(r)]; return !u || u<lim; });
   var r=azar(libres.length?libres:ok); D.usadas[hash(r)]=hoy();
@@ -285,7 +289,7 @@ function frase(sit, extra, feliz){ var B=BANCO[sit]; if(!B) return null; var t=t
 function msgDelDia(){ var f=hoy(), n=diaN(f), lab=dsem(f)===0?'lunes':(dsem(f)>=5?'finde':'general');
   var c=DIAMSG.filter(function(x){ return x[0]===lab; }); if(!c.length) c=DIAMSG;
   if(!(D.perfil && tareas(hoy()).length===3)) c=c.filter(function(x){ return !/\btres\b/i.test(x[1]); }) || c;
-  var x=c[(n-1)%c.length]; return rellenar(x[1],huecos({}))||rellenar(DIAMSG[(n-1)%DIAMSG.length][1],huecos({}))||'Hoy, un poco mejor que ayer. Con eso vale.'; }
+  var x=c[(n-1)%c.length]; return rellenar(TR(x[1]),huecos({}))||rellenar(TR(DIAMSG[(n-1)%DIAMSG.length][1]),huecos({}))||'Hoy, un poco mejor que ayer. Con eso vale.'; }
 function decir(t, f){ if(!t) return; D.chat.push({m:t, f:f||hoy()}); }
 function mensajeDeHoy(){
   var f=hoy(); if(!D.perfil || D.vistos['msg-'+f]) return;
@@ -405,7 +409,7 @@ function respuestaTest(k){ var t=U.t, v=t[k]; if(v==null) return '';
     case 'motiva': return {numeros:'Tendrás tu curva y tus marcas siempre a la vista.',ganar:'Cada semana juegas contra tu yo de la semana pasada.',celebrar:'Hecho. Cada logro de verdad tendrá su fiesta.',apretar:'Te pongo el tono exigente. Lo puedes cambiar.'}[v];
   } return ''; }
 V.bienvenida = function(){ return ''+
-  '<div class="row" style="gap:12px;margin-top:16px"><span class="logo" aria-hidden="true" style="margin-top:0">1%</span><span class="nuevo">BETA</span></div>'+
+  '<div class="row" style="gap:12px;margin-top:16px"><span class="logo" aria-hidden="true" style="margin-top:0">1%</span><span class="nuevo">BETA</span>'+(window.I18N_INFO?'<button type="button" class="chip" style="margin-left:auto;min-height:36px" data-a="go" data-v="ajIdioma" aria-label="Idioma"><span data-noi18n>'+e(window.I18N_INFO.idiomas[window.I18N_INFO.lang])+'</span></button>':'')+'</div>'+
   '<h1 class="h1 xl" style="margin-top:16px">Un <span class="hl">1%</span> mejor cada día.</h1>'+
   '<p class="p2 lg">Para ser constante con el gym y con lo que quieras cambiar: moverte más, el móvil, la comida, el sueño o dejar algo. Sin rachas que se rompen y sin culpa cuando fallas.</p>'+
   '<div class="fill"></div>'+
@@ -609,7 +613,7 @@ V.hoy = function(){ var f=hoy(), p=D.perfil, d=D.dias[f]||{h:{}}, ts=tareas(f), 
     gymFila+(partidoOn() ? matchMini() : ''), false)+
   (ayerSinCerrar ? '<button type="button" class="box row sb" style="padding:12px 14px;text-align:left;width:100%" data-a="cerrarDia" data-v="'+ayer+'"><span class="col" style="gap:2px"><strong style="font-size:15px">Ayer se quedó sin cerrar</strong><span style="font-size:13px;color:var(--text2)">Ciérralo ahora: son 30 segundos.</span></span><span style="color:var(--text3)">'+ic('chev',18)+'</span></button>' : '')+
   (copiaVieja ? '<div class="box col" style="padding:12px 14px;gap:8px"><strong style="font-size:15px">Haz una copia de tus datos</strong><span style="font-size:13px;color:var(--text2)">Se guardan en este móvil. Si borras los datos de Safari, se pierden. Una copia a la semana y listo.</span><div class="grid2"><button type="button" class="chip" style="border:var(--lleno)" data-a="copia">Descargar copia</button><button type="button" class="chip" data-a="copiaLuego" data-v="'+lunesDe(f)+'">Luego</button></div></div>' : '')+
-  '<button type="button" class="box pad" style="text-align:left;width:100%" data-a="tab" data-v="mister" aria-label="Míster: '+e(misterHoy(f))+'. Abrir el chat">'+M(e(misterHoy(f)))+'</button>'+
+  '<button type="button" class="box pad" style="text-align:left;width:100%" data-a="tab" data-v="mister">'+M(e(misterHoy(f)))+'</button>'+
   (d.cerrado ? '' : (d.dificil ? '<button type="button" class="link" data-a="dificil" data-v="0">Quitar el modo día difícil</button>' : '<button type="button" class="link" data-a="dificil" data-v="1">¿Hoy te cuesta? Pon el modo día difícil</button>'))+
   (d.cerrado ? cta('DÍA CERRADO · EDITAR','cerrarDia',f,ic('check'),'done') : '');
 };
@@ -925,7 +929,7 @@ V.ajustes = function(){ var p=D.perfil;
   sec('Lo que sigues', it('Áreas',areas,'go','ajAreas')+(p.areas.indexOf('entreno')!==-1?it('Días de gym',p.diasGym.map(function(i){return DIAS_C[i];}).join(' '),'go','ajGym'):'')+(p.areas.indexOf('moverme')!==-1?it('Meta de pasos',num(p.metaPasos),'go','ajPasos'):'')+(p.areas.indexOf('movil')!==-1?it('Meta de móvil','Menos de '+hm(metaDe('movil')),'go','ajMovil'):'')+(p.areas.indexOf('dejar')!==-1?it('Qué dejas',DEJAR[(p.dejar&&p.dejar.que)||'otra'][0],'go','ajDejar')+it('Tus razones',plural(((p.dejar&&p.dejar.razones)||[]).length,'razón','razones'),'go','razones'):'')+it('Retos',plural(retosActivos().length,'en marcha','en marcha'),'go','retos')+it('Mi día chungo',chungoTxt(p),'go','ajChungo')+it('Peso y altura',(p.peso||p.altura)?[p.peso?num(p.peso,1)+' kg':'',p.altura?p.altura+' cm':''].filter(Boolean).join(' · '):'Sin poner','go','ajCuerpo'))+
   sec('Míster', it('Cómo te llama',e(p.nombre),'go','ajNombre')+it('Tono',TONO_N[p.tono],'go','ajTono'))+
   sec('Tú contra ti', sw('Partido semanal',partidoOn(),'swPartido')+(partidoOn()?sw('Resultado del domingo',p.pitido!==false,'swPitido'):''))+
-  sec('Tu app', it('Celebraciones',{tope:'A tope',normal:'Normal',tranqui:'Tranquilas'}[p.celebra||'normal'],'go','ajCelebra')+it('Repetir el test','Unos 3 minutos','retest','')+it('Tema',{oscuro:'Oscuro',claro:'Claro',auto:'Automático'}[p.tema||'auto'],'go','ajAspecto')+it('Color',{amarillo:'Amarillo',azul:'Azul',verde:'Verde',naranja:'Naranja',morado:'Morado',byn:'Blanco y negro'}[p.color||'amarillo'],'go','ajAspecto')+sw('Sonidos',p.sonido!==false,'swSonido'))+
+  sec('Tu app', it('Celebraciones',{tope:'A tope',normal:'Normal',tranqui:'Tranquilas'}[p.celebra||'normal'],'go','ajCelebra')+it('Repetir el test','Unos 3 minutos','retest','')+it('Tema',{oscuro:'Oscuro',claro:'Claro',auto:'Automático'}[p.tema||'auto'],'go','ajAspecto')+it('Color',{amarillo:'Amarillo',azul:'Azul',verde:'Verde',naranja:'Naranja',morado:'Morado',byn:'Blanco y negro'}[p.color||'amarillo'],'go','ajAspecto')+sw('Sonidos',p.sonido!==false,'swSonido')+(window.I18N_INFO?it('Idioma','<span data-noi18n>'+e(idiomaTxt())+'</span>','go','ajIdioma'):''))+
   '<section class="sec" aria-label="Tus datos"><span class="lbl">Tus datos</span><div class="list"><div class="it" style="cursor:default"><span class="l">Dónde se guardan</span><span class="v">'+donde+'</span></div>'+it('Descargar una copia','Última: '+copia,'copia','')+
   '<label class="it" style="cursor:pointer"><span class="l">Recuperar una copia</span><span class="v">Desde un archivo</span><span style="color:var(--text3)">'+ic('chev',16)+'</span><input type="file" accept=".json,application/json" data-f="restaurar" style="position:absolute;width:1px;height:1px;opacity:0"></label>'+
   it('Privacidad','','go','privacidad')+'<button type="button" class="it" data-a="borrarTodo"><span class="l" style="color:#D93A40">Borrar todos mis datos</span></button></div>'+
@@ -953,6 +957,11 @@ V.ajTono = function(){ return head('Tono de Míster')+'<div class="col" style="g
 V.ajAspecto = function(){ var p=D.perfil; return head('Aspecto')+aspectoOpciones(p.tema||'auto',p.color||'amarillo','ajTema','ajColor')+muestraAspecto(); };
 V.ajCelebra = function(){ var h='', p=D.perfil; PREG.celebra.ops.forEach(function(o){ h+=opt('<span class="dot" aria-hidden="true"></span><span>'+o[1]+'</span>', (p.celebra||'normal')===o[0],'ajCelebra',o[0],'calm'); });
   return head('Celebraciones')+'<p class="p2" style="margin-top:-6px">Solo cuando lo ganas: récords, días cumplidos, goles, semanas completas y retos.</p><div class="col" style="gap:8px">'+h+'</div><button type="button" class="chip" style="min-height:48px" data-a="probarCele">Probar</button><p class="nota">En iPhone, la vibración funciona con iOS 18 o más y es un toque suave: Safari no deja más.</p>'; };
+/* idioma: el del iPhone por defecto; se puede fijar otro (i18n/i18n.js) */
+function idiomaTxt(){ var I=window.I18N_INFO; if(!I) return 'Español'; return I.elegido==='auto' ? I.idiomas[I.lang]+' · iPhone' : I.idiomas[I.lang]; }
+V.ajIdioma = function(){ var I=window.I18N_INFO, h=opt('<span class="dot" aria-hidden="true"></span><span>Como el iPhone</span>', I.elegido==='auto','ajIdioma','auto','calm');
+  Object.keys(I.idiomas).forEach(function(c){ h+=opt('<span class="dot" aria-hidden="true"></span><span data-noi18n>'+I.idiomas[c]+'</span>', I.elegido===c,'ajIdioma',c,'calm'); });
+  return head('Idioma')+'<p class="p2" style="margin-top:-6px">Lo que tienes guardado no cambia.</p><div class="col" style="gap:8px">'+h+'</div>'; };
 V.privacidad = function(){ return head('Privacidad')+M('Lo que apuntas aquí es tuyo. Te lo explico sin letra pequeña.')+
   '<div class="list"><div class="it" style="cursor:default"><span class="l">Dónde están tus datos</span><span class="v">'+(NUBE.ok?'Tu móvil y tu cuenta':'En tu móvil')+'</span></div><div class="it" style="cursor:default"><span class="l">Quién los ve</span><span class="v">Solo tú</span></div><div class="it" style="cursor:default"><span class="l">Anuncios</span><span class="v">Ninguno</span></div><div class="it" style="cursor:default"><span class="l">Cuenta</span><span class="v">No hace falta</span></div></div>'+
   '<p class="p2" style="font-size:14px">Tus datos se guardan en este navegador. Nadie más los ve: ni el que te pasó el enlace ni tus amigos. '+(NUBE.ok?'Como has entrado con tu cuenta de Claude, además se guarda una copia privada en ella. ':'')+'Si borras los datos de Safari o cambias de móvil, se pierden salvo que tengas una copia.</p>'+
@@ -1653,7 +1662,7 @@ async function crearRecordatorio(hora){ var hh=(hora||'22:00').split(':'), m=(+h
   if(EN_CLAUDE){ toast('El recordatorio funciona en la app instalada en tu iPhone.'); return; }
   D.perfil.recordatorio=txt; guardar(); U.sheet=null; render();
   toast('Toca «Añadir todo» y el calendario te avisará cada día a las '+txt+'.');
-  setTimeout(function(){ location.href='recordatorios/'+h2+'.ics'; }, 400); }
+  setTimeout(function(){ location.href='recordatorios/'+(LOC?LOC.lang+'/':'')+h2+'.ics'; }, 400); }
 function esInstalada(){ try{ return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true; }catch(err){ return false; } }
 
 /* =========================================================
@@ -1772,8 +1781,8 @@ var VALK = {redes:1, estudio:1, paginas:1};          // retos que preguntan una 
 var EQ_EUR = [[10,'una entrada de cine'],[25,'una cena'],[40,'un mes de gimnasio'],[80,'unas zapatillas'],[150,'unos auriculares buenos'],[300,'un viaje a Roma'],[600,'un móvil nuevo'],[1000,'una semana de vacaciones'],[2000,'un viaje a Japón']];
 var TAGS_BUENAS = [['gente','Gente','#5B8CFF'],['logro','Un logro','#FFD60A'],['salud','Salud','#3DDC84'],['placer','Un pequeño placer','#FF7A59'],['aprendi','Algo que aprendí','#B45BFF']];
 
-function eur(x){ return (Math.round(x*100)/100).toFixed(2).replace('.',',')+' €'; }
-function eur0(x){ return x>=100 ? num(Math.round(x))+' €' : eur(x); }
+function eur(x){ if(LOC) return LOC.eur(x); return (Math.round(x*100)/100).toFixed(2).replace('.',',')+' €'; }
+function eur0(x){ if(LOC) return LOC.eur0(x); return x>=100 ? num(Math.round(x))+' €' : eur(x); }
 function kReto(r){ var R=retoDef(r.n); return (R&&R.k)||''; }
 function cfgR(r){ return r.cfg||{}; }
 function edadP(){ var e1=D.perfil && +D.perfil.edad; return e1>0 ? e1 : 25; }
@@ -1846,6 +1855,7 @@ var PREG_RETO = {
         {id:'veces',t:'¿Cuántas veces lo hacías?',ops:[[1,'1 al día'],[3,'3 al día'],[5,'5 al día'],[10,'10 al día'],[2/7,'2 a la semana'],[5/7,'5 a la semana']],def:1},
         {id:'eur',t:'¿Te cuesta dinero cada vez?',ops:[[0,'No'],[1,'1 €'],[2,'2 €'],[3,'3 €'],[5,'5 €'],[10,'10 €']],def:0}]
 };
+if(LOC) LOC.escalar(PREG_RETO, EQ_EUR); /* importes de ejemplo a la escala de la moneda del país */
 function pregDe(k){ var l=PREG_RETO[k]||[], pf=D.perfil||{}; return l.filter(function(q){ return !((q.id==='altura' && pf.altura) || (q.id==='peso' && k==='pasos' && pf.peso)); }); }
 function cfgDefecto(k){ var c={}; pregDe(k).forEach(function(q){ if(q.def!==undefined) c[q.id]= Array.isArray(q.def)? q.def.slice() : q.def; }); return c; }
 function retoCfgOk(){ var k=U.rqK, c=U.rq||{}; return pregDe(k).every(function(q){ return q.tipo!=='txt' || String(c[q.id]||'').trim(); }) && !(k==='estudio' && !(c.dias&&c.dias.length)) && !(k==='pantalla' && +c.meta>=+c.antes); }
@@ -2274,7 +2284,7 @@ function titularHoy(f, st){
   else cat='faltan';
   var L=(typeof TITU!=='undefined' && TITU[cat]) ? TITU[cat] : null;
   if(!L || !L.length) return st.todo ? 'Todo hecho.' : 'A por hoy.';
-  var t=L[(diaN(f)*7 + cat.length) % L.length];
+  var t=TR(L[(diaN(f)*7 + cat.length) % L.length]);
   return t.replace('{x}', String(st.falta)).replace('{d}', String(st.dias))
           .replace(/,? ?\[nombre\]/, p.nombre ? ', '+p.nombre : '');
 }
@@ -2285,7 +2295,7 @@ var TABS = [['hoy','HOY'],['gym','GYM'],['retos','RETOS'],['progreso','PROGRESO'
 function tabbar(cur){ var h='<nav class="tabbar" aria-label="Secciones">'; TABS.forEach(function(t){ h+='<button type="button" class="tb" data-a="tab" data-v="'+t[0]+'"'+(cur===t[0]?' aria-current="page"':'')+'>'+ic(t[0],24,2.2)+'<span>'+t[1]+'</span></button>'; }); return h+'</nav>'; }
 var ultimaPant=null, toastT=null, toastPrev='';
 function render(){
-  if(!D.perfil && TEST.indexOf(U.pantalla)===-1) U.pantalla='bienvenida';
+  if(!D.perfil && TEST.indexOf(U.pantalla)===-1 && U.pantalla!=='ajIdioma') U.pantalla='bienvenida';
   var scr=document.getElementById('scr'), keep=(ultimaPant===U.pantalla && scr) ? scr.scrollTop : 0;
   var enTest = TEST.indexOf(U.pantalla)!==-1 || U.pantalla==='wrap', tab = enTest ? null : (TAB_DE[U.pantalla]||'hoy');
   var p=D.perfil||{tema:U.t&&U.t.tema, color:U.t&&U.t.color};
@@ -2303,6 +2313,7 @@ function render(){
     (U.toast ? '<div class="toast row sb'+(U.toast!==toastPrev?' in':'')+(U.golToast?' gol':'')+'" role="status"><span>'+e(U.toast)+'</span>'+(U.undo?'<button type="button" class="link" style="color:var(--onCta) !important;min-height:32px;padding:0 4px" data-a="deshacer">Deshacer</button>':'')+'</div>' : '') +
     sheetHTML() + (U.guia ? guiaHTML() : '') + (U.cele ? celeHTML() : '');
   toastPrev=U.toast;
+  if(window.I18N_RT) window.I18N_RT.barrer(app);
   if(velo){ var v=document.createElement('div'); v.className='velo'; v.setAttribute('aria-hidden','true'); app.appendChild(v);
     setTimeout(function(){ if(v.parentNode) v.parentNode.removeChild(v); }, 260); }
   document.getElementById('scr').scrollTop = keep;
@@ -2359,6 +2370,7 @@ function act(a,v,el){
     case 'plega': if(!D.abierto) D.abierto={}; var abAnt = D.abierto[v]==null ? (v==='retos') : !!D.abierto[v]; D.abierto[v]=!abAnt; guardar(); render(); break;
     case 'tab': U.hist=[]; U.prevPant=U.pantalla; U.pantalla=v; U.toast=''; U.sheet=null; if(v==='progreso') U.mes=null; if(v==='mister') U.qr=U.qr==='cuesta'?'cuesta':null; render(); if(v==='mister') bajarChat(); break;
     case 'retest': var pp=D.perfil, b=pp.base||{}; U.t={nombre:pp.nombre, edad:typeof pp.edad==='number'?String(pp.edad):'', areas:pp.areas.slice(), diasGym:(pp.diasGym||[]).slice(), dejar:pp.dejar?{que:pp.dejar.que, euros:pp.dejar.euros||''}:{}, deporte:b.deporte, movil:b.movil, sueno:b.sueno, comida:b.comida, pasos:b.pasos, nivel:pp.nivel, objetivo:pp.objetivo, donde:pp.donde, tiempo:pp.tiempo?String(pp.tiempo):null, animo:pp.animo, abandono:pp.abandono, motiva:pp.motiva, tono:pp.tono, celebra:pp.celebra, tema:pp.tema||'auto', color:pp.color||'amarillo', peso:pp.peso!=null?String(pp.peso):'', altura:pp.altura!=null?String(pp.altura):'', chungo:pp.chungo||null, chungoTxt:pp.chungoTxt||'', reto:null, _tonoTocado:true, _celebraTocado:!!pp.celebra}; U.tRetosTodos=false; U.hist=[]; go('nombre'); break;
+    case 'ajIdioma': if(window.I18N_INFO) window.I18N_INFO.poner(v); break;
     case 'ajCelebra': p.celebra=v; p.sonido = v!=='tranqui'; guardar(); render(); if(v==='tope') celebrar({tipo:'mini'}); break;
     case 'probarCele': celebrar({tipo:'record', eyebrow:'Así se celebra un récord', titulo:'¡Récord!', grande:'+1 REPE', sub:'Ejemplo: hoy 60 kg × 11. Antes, 60 kg × 10.', frase:'Así suena cuando lo ganas de verdad.', boton:'ENTENDIDO'}); break;
     case 'testInicio': U.t={areas:[], diasGym:[], tono:'directo', dejar:{}, tema:'auto', color:'amarillo'}; U.tRetosTodos=false; go('nombre'); break;
