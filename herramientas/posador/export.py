@@ -1,6 +1,7 @@
 import json, sys, re, asyncio
 sys.path.insert(0,'/home/claude/rig')
 from ex2 import EX, EJM, GRADS, pose_transforms, joints, build
+import ex3
 from playwright.async_api import async_playwright
 svgs={}
 for i,(n,(sp,gear,obj,view)) in enumerate(EX.items()):
@@ -9,6 +10,8 @@ for i,(n,(sp,gear,obj,view)) in enumerate(EX.items()):
     s=re.sub(r'\s(visibility="visible"|vector-effect="non-scaling-stroke")','',s)
     s=re.sub(r'(\d+\.\d)\d+',r'\1',s)
     svgs[n]=s
+for i,n in enumerate(ex3.EXF):
+    s=ex3.render(n,'g%d'%i); s=re.sub(r'\s(visibility="visible"|vector-effect="non-scaling-stroke")','',s); s=re.sub(r'(\d+\.\d)\d+',r'\1',s); svgs[n]=s
 async def main():
     async with async_playwright() as p:
         b=await p.chromium.launch(executable_path='/usr/bin/google-chrome'); pg=await b.new_page()
@@ -32,7 +35,7 @@ async def main():
         await b.close()
         import collections
         norm={}
-        for n,v in out.items(): norm[n]=re.sub(r'\bf\d+_','§',v)
+        for n,v in out.items(): norm[n]=re.sub(r'\b[fg]\d+_','§',v)
         cnt=collections.Counter(); toks={}
         for n,v in norm.items():
             t=re.split(r'(?=<)',v); toks[n]=t; cnt.update(set(t))

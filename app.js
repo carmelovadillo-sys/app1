@@ -3012,7 +3012,7 @@ var ACC_GYM = {
 };
 /* ==== GYM2 FIN ==== */
 
-(function(){ var sc=document.createElement('script'); sc.src='fotos.js?v=g4f21n26'; sc.async=true; sc.onload=function(){ if(D.perfil && /^(entreno|ejercicios|ejercicio|gym|resumen|rutinaEd)$/.test(U.pantalla) && !escribiendo()) render(); }; document.head.appendChild(sc); })();
+(function(){ var sc=document.createElement('script'); sc.src='fotos.js?v=g5f21n26'; sc.async=true; sc.onload=function(){ if(D.perfil && /^(entreno|ejercicios|ejercicio|gym|resumen|rutinaEd)$/.test(U.pantalla) && !escribiendo()) render(); }; document.head.appendChild(sc); })();
 if(/[?&]debug=1/.test(location.search)) window.__app1={get D(){ return D; }, set D(x){ D=x; }, U:U, act:act, render:render, empezarApp:empezarApp, guardar:guardar, imgEj:imgEj, FICHAS:FICHAS, EJ:EJ, POSE:POSE, IMG_CACHE:IMG_CACHE};
 render(); pasosDeURL();
 nubeIniciar(); fotosCargar();
