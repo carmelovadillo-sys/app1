@@ -2782,7 +2782,14 @@ var FOTO_REF = { 'Hip thrust en máquina':'hipThrust@', 'Dominadas asistidas en 
   'Curl de bíceps en polea alta':'Curl de bíceps en polea baja', 'Curl bayesiano en polea':'Curl de bíceps en polea baja', 'Curl de bíceps con banda':'Curl de bíceps en polea baja',
   'Extensión de tríceps a una mano en polea':'tricepsCuerda@', 'Rodillas al pecho sentado':'Crunch inverso', 'Tijeras abdominales':'Hollow hold', 'Toques de talón':'Crunch con piernas elevadas',
   'Crunch en banco declinado':'Abdominales completos', 'Crunch con fitball':'Abdominales completos', 'Elevación de piernas en silla romana':'piernasColgado@', 'Escuadra en paralelas':'piernasColgado@',
-  'Flexiones en pica':'Flexiones con rodillas apoyadas', 'Remo en TRX':'Remo invertido', 'Remo con kettlebell':'remoMancuerna@' };
+  'Flexiones en pica':'Flexiones con rodillas apoyadas', 'Flexiones arqueras':'flexiones@', 'Flexiones en anillas':'flexiones@', 'Flexiones en TRX':'flexiones@', 'Flexiones hindúes':'Flexiones con rodillas apoyadas',
+  'Dominadas escapulares':'dominada@', 'Muscle up':'dominada@', 'Colgarse de la barra':'dominada@', 'Jalón a una mano en polea':'jalonPecho@', 'Jalón al pecho con banda':'jalonPecho@',
+  'Remo en polea a una mano':'remoPoleaBaja@', 'Remo en T':'remoBarra@', 'Remo con banda':'remoPoleaBaja@', 'Aperturas en polea en banco inclinado':'aperturasMancuernas@', 'Press de pecho con banda':'Press de pecho en máquina',
+  'Zancadas con salto':'zancadas@', 'Zancada cruzada':'zancadas@', 'Zancadas con saco':'zancadas@', 'Patada de glúteo en máquina':'patadaGluteoPolea@', 'Patada de glúteo con banda':'patadaGluteoPolea@',
+  'Elevaciones laterales en polea':'lateralesMancuernas@', 'Elevaciones laterales en máquina':'lateralesMancuernas@', 'Pájaros en polea':'pajaros@', 'Pull apart con banda':'pajaros@',
+  'Curl martillo en polea con cuerda':'curlMartillo@', 'Curl Zottman':'curlMancuernas@', 'Curl invertido con barra':'curlBarra@', 'Curl invertido con barra Z':'curlBarra@',
+  'Plancha Copenhague':'planchaLateral@', 'Crunch oblicuo':'crunch@', 'Limpiaparabrisas':'Elevación de piernas tumbado', 'Paseo de maleta':'Paseo del granjero', 'Rodillas al pecho en TRX':'Escaladores',
+  'Rotación externa con mancuerna':'Rotación externa en polea', 'Remo en TRX':'Remo invertido', 'Remo con kettlebell':'remoMancuerna@' };
 function fotoDe(n){ var F=window.FOTOS; if(F && F[n]) return n; var r=FOTO_REF[n]; if(r && r.charAt(r.length-1)!=='@' && F && F[r]) return r; return null; }
 function fotoUrl(n){ var k='F:'+n; if(IMG_CACHE[k]!==undefined) return IMG_CACHE[k]; var u=null; try{ u=URL.createObjectURL(new Blob([window.FOTOS[n]],{type:'image/svg+xml'})); }catch(err){} IMG_CACHE[k]=u; return u; }
 function refFig(n){ var r=FOTO_REF[n]; if(r && r.charAt(r.length-1)==='@'){ var k=r.slice(0,-1); if(FICHAS[k] && FIG[k]) return {k:k, ref:true}; } return null; }
@@ -3005,7 +3012,7 @@ var ACC_GYM = {
 };
 /* ==== GYM2 FIN ==== */
 
-(function(){ var sc=document.createElement('script'); sc.src='fotos.js?v=g3f21n26'; sc.async=true; sc.onload=function(){ if(D.perfil && /^(entreno|ejercicios|ejercicio|gym|resumen|rutinaEd)$/.test(U.pantalla) && !escribiendo()) render(); }; document.head.appendChild(sc); })();
+(function(){ var sc=document.createElement('script'); sc.src='fotos.js?v=g4f21n26'; sc.async=true; sc.onload=function(){ if(D.perfil && /^(entreno|ejercicios|ejercicio|gym|resumen|rutinaEd)$/.test(U.pantalla) && !escribiendo()) render(); }; document.head.appendChild(sc); })();
 if(/[?&]debug=1/.test(location.search)) window.__app1={get D(){ return D; }, set D(x){ D=x; }, U:U, act:act, render:render, empezarApp:empezarApp, guardar:guardar, imgEj:imgEj, FICHAS:FICHAS, EJ:EJ, POSE:POSE, IMG_CACHE:IMG_CACHE};
 render(); pasosDeURL();
 nubeIniciar(); fotosCargar();
