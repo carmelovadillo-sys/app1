@@ -959,6 +959,32 @@ button.pill2:active{transform:scale(.96)}
 .pl2{display:flex;flex-direction:column;gap:10px;align-items:stretch;width:100%;padding:12px;border-radius:14px;border:var(--borde);background:var(--caja);color:var(--text) !important}
 .pl2 .rut2-img .eimg.xs{width:25%;height:54px;flex:1}
 .pl2:active{transform:scale(.985)}
+
+/* tres por fila (21 nov, tarde) */
+.eimg.t{width:100%;aspect-ratio:1/1;height:auto;border-radius:12px}
+.eimg.t.fig img{padding:3px}
+.mgrid,.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mt{position:relative;display:flex;flex-direction:column;gap:5px;padding:5px 5px 7px;border-radius:14px;border:var(--fina);background:var(--caja);text-align:left;color:var(--text) !important;min-width:0}
+.mt:active,.pc-b:active{transform:scale(.96)}
+.mt.on{border:2px solid var(--acc);padding:4px 4px 6px;box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent)}
+.mt.fin .eimg{opacity:.55}
+.mt-n,.pc-n{font-size:12px;font-weight:800;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.4em;padding:0 2px}
+.mt-p{position:absolute;top:9px;right:9px;min-width:28px;height:22px;padding:0 6px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:color-mix(in srgb,var(--caja) 82%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:var(--fina);font-variant-numeric:tabular-nums}
+.mt.fin .mt-p{background:var(--acc);color:var(--onAcc);border:none}
+.mt.add{border-style:dashed;border-color:var(--text3)}
+.mt-mas{color:var(--text2)}
+.pgrid{margin-top:2px}
+.pc{position:relative;min-width:0}
+.pc-b{display:flex;flex-direction:column;gap:4px;width:100%;padding:5px 5px 8px;border-radius:14px;border:var(--fina);background:var(--caja);text-align:left;color:var(--text) !important}
+.pc-m{font-size:11px;color:var(--text2);padding:0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-m b{color:var(--accTxt)}
+.pc.sel .pc-b{border:2px solid var(--acc);padding:4px 4px 7px;background:color-mix(in srgb,var(--acc) 10%,var(--caja))}
+.pc-ck{position:absolute;top:9px;right:9px;width:26px;height:26px;border-radius:50%;border:2px solid color-mix(in srgb,var(--text) 45%,transparent);background:color-mix(in srgb,var(--caja) 70%,transparent);display:flex;align-items:center;justify-content:center;color:transparent}
+.pc.sel .pc-ck{background:var(--acc);border:none;color:var(--onAcc)}
+.pc-i.inf svg{transform:rotate(180deg)}
+.pc-i{position:absolute;top:9px;left:9px;width:30px;height:30px;border-radius:50%;border:none;background:color-mix(in srgb,var(--caja) 78%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;color:var(--accTxt) !important}
+.pc.ya .pc-b{opacity:.55}
+.pc-ya{position:absolute;top:10px;right:9px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 6px;border-radius:6px;background:var(--acc);color:var(--onAcc)}
 </style></head><body>
 <div class="spl" id="spl" aria-hidden="true"><div class="spl-mark"><div class="spl-glow"></div><div class="spl-dot"></div><svg class="spl-logo" viewBox="202 0 2675 1785" focusable="false"><defs><linearGradient id="splg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#D9E3F6"/></linearGradient></defs><path fill="url(#splg)" d="M243 1767 434 411Q392 454 325 480Q258 507 202 507L242 226Q296 218 360 192Q425 165 484 118Q543 72 580 6H863L616 1767Z M1300 1767 2088 0H2412L1623 1767Z M1147 1239Q961 1239 875 1124Q788 1010 815 819L866 456Q895 254 1007 146Q1119 38 1316 38Q1513 38 1595 146Q1678 254 1649 456L1598 819Q1571 1010 1453 1124Q1334 1239 1147 1239Z M2367 1785Q2181 1785 2095 1670Q2009 1556 2035 1365L2087 1002Q2115 800 2227 692Q2339 584 2536 584Q2733 584 2816 692Q2898 800 2870 1002L2818 1365Q2792 1556 2673 1670Q2554 1785 2367 1785Z M2404 1523Q2443 1523 2474 1494Q2505 1466 2511 1424L2580 938Q2588 879 2576 845Q2563 811 2504 811Q2446 811 2424 846Q2402 880 2394 938L2325 1424Q2319 1466 2342 1494Q2365 1523 2404 1523Z M1184 977Q1223 977 1254 948Q1285 920 1291 878L1359 392Q1368 333 1355 299Q1343 265 1284 265Q1226 265 1204 300Q1181 334 1173 392L1105 878Q1099 920 1122 948Q1145 977 1184 977Z"/><path class="spl-spark" fill="#FFD60A" d="M1184 977Q1223 977 1254 948Q1285 920 1291 878L1359 392Q1368 333 1355 299Q1343 265 1284 265Q1226 265 1204 300Q1181 334 1173 392L1105 878Q1099 920 1122 948Q1145 977 1184 977Z"/></svg><div class="spl-tag">BE <b>1%</b> BETTER EVERY DAY</div></div></div>
 <script>(function(){var s=document.getElementById('spl');if(!s)return;function q(){if(s&&s.parentNode)s.parentNode.removeChild(s);s=null;}s.addEventListener('animationend',function(e){if(e.target===s)q();});s.addEventListener('pointerdown',function(){s.classList.add('fin');});setTimeout(q,4600);})();</script>
